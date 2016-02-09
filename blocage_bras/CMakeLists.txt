@@ -129,15 +129,24 @@ include_directories(
 
 ## Declare a C++ executable
  add_executable(enregistrement_pos src/enregistrement_pos.cpp)
+ add_executable(test_position src/test_position.cpp)
+
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
  add_dependencies(enregistrement_pos enregistrement_pos_generate_messages_cpp)
+ add_dependencies(test_position test_position_generate_messages_cpp)
+
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(enregistrement_pos
    ${catkin_LIBRARIES}
  )
+target_link_libraries(test_position
+   ${catkin_LIBRARIES}
+ )
+
+
 
 #############
 ## Install ##

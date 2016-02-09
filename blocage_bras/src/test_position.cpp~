@@ -7,7 +7,6 @@
 #include <iostream>
 #include <stdlib.h>
 #include <fstream>
-#include <ctime>
 using namespace std;
 
 ros::Publisher brasPublisher;
@@ -29,18 +28,7 @@ void affichageMessageIntro()
     cout << messageIntro;
 
 }
-void ecritureTexte(){
-	ofstream fichier("//usr//users//promo2017//bordogna_rem//catkin_ws//src//blocage_bras//donnees_points.txt", ios::out | ios::app); 
-	time_t t = time(0);   // get time now
-	struct tm * now = localtime( & t );
-        if(fichier)
-        { 
-	  fichier << "Enregistrement du " << (now->tm_year + 1900) << '-'  << (now->tm_mon + 1) << '-'<<  now->tm_mday << endl;
-          fichier.close();
-        }
-        else{
-	  cout << "Impossible d'ouvrir le fichier !" << endl;}
-}
+
 
 
 void Miseajour() {
@@ -74,20 +62,6 @@ void Miseajour() {
 	//ros::Duration(1).sleep();
 
 }
-
-
-bool Sauvegarde(){
- 	ofstream fichier("//usr//users//promo2017//bordogna_rem//catkin_ws//src//blocage_bras//donnees_points.txt", ios::out | ios::app); 
-
-        if(fichier)
-        { 
-	  fichier << lesThetas[0]<<" "<< lesThetas[1]<<" "<<lesThetas[2]<<" "<<lesThetas[3]<<"\n";
-          fichier.close();
-        }
-        else{
-	  cout << "Impossible d'ouvrir le fichier !" << endl;}
-}
-
 
 
 bool traitementInstruction(char c)
@@ -164,6 +138,12 @@ void majValeurs()
 }
 
 
+bool validation_position(double* theta){
+
+  return true;
+
+}
+
 int main(int argc, char **argv) {
   //Initialisation des valeurs de theta
      lesThetas[0] = 0.111;
@@ -173,7 +153,6 @@ int main(int argc, char **argv) {
      lesThetas[4] = 0.111;
 
     affichageMessageIntro();
-    ecritureTexte();
     char c = 0;
     bool pas_sauvegarde = false;
     ros::init(argc, argv, "enregistrement_pos");
@@ -181,33 +160,19 @@ int main(int argc, char **argv) {
 
 	//Initialisation des Publishers
 	brasPublisher = n.advertise<brics_actuator::JointPositions>("arm_1/arm_controller/position_command", 1);//le 1 fait que ca efface l'instructions, le msg publlié des qu'un autre est envoyé au topic
-	ros::Rate loop_rate(100);
+	ros::Rate loop_rate(500);
 	sleep(1); //Indispensable pour laisser le temps au bras d'initialiser
 	Miseajour();//On publie les modifications
 	system("stty raw");
 
     while (ros::ok()){
       c= getchar();
-      if(c==27){ros::shutdown();}
       traitementInstruction(c);//On modifie les angles theta
-      Miseajour();//On publie les modifications
-      Sauvegarde();//On fait une sauvegarde
-  
-
-     //si on sauvergarde "à la main" en tapant espace, instructions ci-dessous:
-     //NB : il faut repasser en " cooked"
-     /* c= getchar();
-        if(c==32){
-	  pas_sauvegarde = true;
-	}
-        traitementInstruction(c);//On modifie les angles theta
+      if(validation_position(lesThetas)){
 	Miseajour();//On publie les modifications
-	if(pas_sauvegarde){
-	  Sauvegarde();
-	  cout << "Position sauvegardée" << endl;
-	  pas_sauvegarde = false;
-	}*/
-
+      }else{
+	cout << "Position interdite" << endl;
+      }
 
       loop_rate.sleep();
     }
@@ -215,3 +180,5 @@ int main(int argc, char **argv) {
    system("stty cooked");
    return 0;
 }
+
+
