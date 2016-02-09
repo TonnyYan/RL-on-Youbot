@@ -175,11 +175,12 @@ int main(int argc, char **argv) {
     while (ros::ok()){
       c= getchar();
       traitementInstruction(c);//On modifie les angles theta
-	Miseajour();//On publie les modifications
-	  Sauvegarde();
-	  //si on sauvergarde à la main en tapant espace, instructiobns ci-dessous:
-	  //NB : il faut repasser en " cooked"
-      /* c= getchar();
+      Miseajour();//On publie les modifications
+      Sauvegarde();//On fait une sauvegard
+
+     //si on sauvergarde "à la main" en tapant espace, instructions ci-dessous:
+     //NB : il faut repasser en " cooked"
+     /* c= getchar();
         if(c==32){
 	  pas_sauvegarde = true;
 	}
@@ -189,9 +190,12 @@ int main(int argc, char **argv) {
 	  Sauvegarde();
 	  cout << "Position sauvegardée" << endl;
 	  pas_sauvegarde = false;
-	  }*/
-        loop_rate.sleep();
+	}*/
+
+
+      loop_rate.sleep();
     }
+
    system("stty cooked");
-        return 0;
+   return 0;
 }
