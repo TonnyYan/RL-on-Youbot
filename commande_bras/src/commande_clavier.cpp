@@ -3,11 +3,12 @@
 #include "boost/units/io.hpp"
 #include "brics_actuator/JointPositions.h"
 #include "geometry_msgs/Twist.h"
-#include "curses.h"
-#include <stdio.h>
+#include <curses.h>
 #include <iostream>
-#include <stdlib.h>
-using namespace std;
+#include <sstream>
+#include <array>
+#include <iterator>
+#include <string>
 
 ros::Publisher brasPublisher;
 ros::Publisher pincePublisher;
@@ -19,21 +20,22 @@ ros::Subscriber pinceSubscriber;
 void affichageMessageIntro()
 {
 
-    string messageIntro("");
-    messageIntro = "Bienvenue dans le manipulateur youbot \n \nCommandez le robot avec les touches suivantes : \n " ;
-    messageIntro += "\n|  z : avancer              |"; //
-    messageIntro += "\n|  s : reculer              |";
-    messageIntro += "\n|  q : gauche               |";
-    messageIntro += "\n|  d : droite               |";
-    messageIntro += "\n|  espace : stop            |";
-    messageIntro += "\n|  e : rotation droite      |";
-    messageIntro += "\n|  a : rotation gauche      | \n";
-    messageIntro += "\n|  p : ouverture pince      |";
-    messageIntro += "\n|  m : fermeture pince      | \n ";
-    messageIntro += "\n|  c : tourner bras à gauche|";
-    messageIntro += "\n|  v : tourner bras à droite| \n";
-    messageIntro += "\n|  x : déplier le bras      | \n";
-    cout << messageIntro;
+
+  std::string messageIntro("");
+  messageIntro = "Bienvenue dans le manipulateur youbot \n \nCommandez le robot avec les touches suivantes : \n " ;
+  messageIntro += "\n|  z : avancer              |"; //
+  messageIntro += "\n|  s : reculer              |";
+  messageIntro += "\n|  q : gauche               |";
+  messageIntro += "\n|  d : droite               |";
+  messageIntro += "\n|  espace : stop            |";
+  messageIntro += "\n|  e : rotation droite      |";
+  messageIntro += "\n|  a : rotation gauche      | \n";
+  messageIntro += "\n|  p : ouverture pince      |";
+  messageIntro += "\n|  m : fermeture pince      | \n ";
+  messageIntro += "\n|  c : tourner bras à gauche|";
+  messageIntro += "\n|  v : tourner bras à droite| \n";
+  messageIntro += "\n|  x : déplier le bras      | \n";
+  std::cout << messageIntro;
 
 }
 
@@ -41,73 +43,77 @@ void affichageMessageIntro()
 
 void bougerBras(int i) {
 
-	//Initialisation des valeurs
-	std::vector<double> jointvalues(5);
-    switch (i) {
-    case -1 :
-	jointvalues[0] = 2.95;//Rotation de la base
-        jointvalues[1] = 0.11;//Valeurs par défaut de calibration
-        jointvalues[2] = -0.11;
-        jointvalues[3] = 0.11;
-        jointvalues[4] = 0.111;
-        break;
-    case 1 :
-        jointvalues[0] = 0.111;//Rotation de la base
-        jointvalues[1] = 0.11;//Valeurs par défaut de calibration
-        jointvalues[2] = -0.11;
-        jointvalues[3] = 0.11;
-        jointvalues[4] = 0.111;
-        break;
-    case 0 :
-        jointvalues[0] = 2.95;//Dépliement du bras
-        jointvalues[1] = 1.05;
-        jointvalues[2] = -2.44;
-        jointvalues[3] = 1.73;
-        jointvalues[4] = 2.95;
-        break;
-    }
+  //Initialisation des valeurs
+  std::array<double,5> jointvalues;
 
 
-	//Création de messages positions
-	//Contient une pile de 5 messages de type JointValue
-	brics_actuator::JointPositions msg;
-	for (int i = 0; i < 5; i++) {
-		//Initialisation du message value du joint no.i
-		brics_actuator::JointValue joint;
-		joint.timeStamp = ros::Time::now();
-		joint.value = jointvalues[i];
-		joint.unit = boost::units::to_string(boost::units::si::radian);
-		std::stringstream jointName;
-		jointName << "arm_joint_" << (i + 1);
-		joint.joint_uri = jointName.str();
-		//On empile le message value dans le message de positions
-		msg.positions.push_back(joint);
-	}
 
-	//On publie le message sur le topic
-	brasPublisher.publish(msg);
-	//ros::Duration(1).sleep();
+    // jointvalues[0] = 2.95;//Rotation de la base
+    // jointvalues[1] = 0.11;//Valeurs par défaut de calibration
+    // jointvalues[2] = -0.11;
+    // jointvalues[3] = 0.11;
+    // jointvalues[4] = 0.111;
+    
+
+  switch (i) {
+  
+  case -1 : jointvalues = {2.95, 0.11, -0.11, 0.11, 0.111}; break;
+  case  1 :
+    jointvalues[0] = 0.111;//Rotation de la base
+    jointvalues[1] = 0.11;//Valeurs par défaut de calibration
+    jointvalues[2] = -0.11;
+    jointvalues[3] = 0.11;
+    jointvalues[4] = 0.111;
+    break;
+  case 0 :
+    jointvalues[0] = 2.95;//Dépliement du bras
+    jointvalues[1] = 1.05;
+    jointvalues[2] = -2.44;
+    jointvalues[3] = 1.73;
+    jointvalues[4] = 2.95;
+    break;
+  }
+
+
+  //Création de messages positions
+  //Contient une pile de 5 messages de type JointValue
+  brics_actuator::JointPositions msg;
+  auto out = std::back_inserter(msg.positions);
+
+  brics_actuator::JointValue joint;
+  joint.unit = boost::units::to_string(boost::units::si::radian);
+  joint.timeStamp = ros::Time::now();
+  unsigned int joint_rank = 0;
+  for(auto& value : jointvalues) {
+    joint.value = value;
+    joint.joint_uri = "arm_joint_" + std::to_string(joint_rank++);
+    *(out++) = joint;
+  }
+  
+  //On publie le message sur le topic
+  brasPublisher.publish(msg);
+  //ros::Duration(1).sleep();
 
 }
 
 void bougerPince(int sens){
 
-	brics_actuator::JointPositions msg;
-	brics_actuator::JointValue joint;
+  brics_actuator::JointPositions msg;
+  brics_actuator::JointValue joint;
 
-	joint.timeStamp = ros::Time::now();
-	joint.unit = boost::units::to_string(boost::units::si::meter);
-	if (sens == 1){ joint.value = 0.011;} //on ouvre
-	if (sens == -1){ joint.value = 0.001;}  //on ferme
+  joint.timeStamp = ros::Time::now();
+  joint.unit = boost::units::to_string(boost::units::si::meter);
+  if (sens == 1){ joint.value = 0.011;} //on ouvre
+  if (sens == -1){ joint.value = 0.001;}  //on ferme
 
-	joint.joint_uri = "gripper_finger_joint_l";
-	msg.positions.push_back(joint);
-	joint.joint_uri = "gripper_finger_joint_r";
-	msg.positions.push_back(joint);
+  joint.joint_uri = "gripper_finger_joint_l";
+  msg.positions.push_back(joint);
+  joint.joint_uri = "gripper_finger_joint_r";
+  msg.positions.push_back(joint);
 
-	pincePublisher.publish(msg);
-    //ros::Duration(1).sleep();//Sleep -> Indispensable pour prise en compte commande
-//cette commande n'est plus necessaire!
+  pincePublisher.publish(msg);
+  //ros::Duration(1).sleep();//Sleep -> Indispensable pour prise en compte commande
+  //cette commande n'est plus necessaire!
 
 }
 
@@ -115,110 +121,109 @@ void bougerPince(int sens){
 
 void bougerPlatform(int i)
 {
-    geometry_msgs::Twist twist;
+  geometry_msgs::Twist twist;
 
-    switch (i)
+  switch (i)
     {//z
     case 122 :
-        twist.linear.x = 0.15;
-        twist.linear.y = 0;
-        twist.angular.x = 0;
-        break;
-//s
+      twist.linear.x = 0.15;
+      twist.linear.y = 0;
+      twist.angular.x = 0;
+      break;
+      //s
     case 115 :
-        twist.linear.x = -0.15;
-        twist.linear.y = 0;
-        twist.angular.x = 0;
-        break;
-//q
+      twist.linear.x = -0.15;
+      twist.linear.y = 0;
+      twist.angular.x = 0;
+      break;
+      //q
     case 113 :
-        twist.linear.x = 0;
-        twist.linear.y = 0.15;
-        twist.angular.x = 0;
-        break;
-//d
-     case  100:
-        twist.linear.x = 0;
-        twist.linear.y = -0.15;
-        twist.angular.x = 0;
-        break;
-//e
-     case 101 :
-        twist.linear.x = 0;
-        twist.linear.y = 0;
-        twist.angular.z = 0.15;
-        break;
+      twist.linear.x = 0;
+      twist.linear.y = 0.15;
+      twist.angular.x = 0;
+      break;
+      //d
+    case  100:
+      twist.linear.x = 0;
+      twist.linear.y = -0.15;
+      twist.angular.x = 0;
+      break;
+      //e
+    case 101 :
+      twist.linear.x = 0;
+      twist.linear.y = 0;
+      twist.angular.z = 0.15;
+      break;
     case 97 :
-        twist.linear.x = 0;
-        twist.linear.y = 0;
-        twist.angular.z = -0.15;
-	break;
-//espace
+      twist.linear.x = 0;
+      twist.linear.y = 0;
+      twist.angular.z = -0.15;
+      break;
+      //espace
     case 32 :
-        twist.linear.x = 0;
-        twist.linear.y = 0;
-        twist.angular.x = 0;
-        break;
+      twist.linear.x = 0;
+      twist.linear.y = 0;
+      twist.angular.x = 0;
+      break;
     }
-        platformPublisher.publish(twist);
-      //  ros::Duration(0).sleep();
+  platformPublisher.publish(twist);
+  //  ros::Duration(0).sleep();
 }
 
 
 bool traitementInstruction(char c)
 {
 
-    switch (c)
+  switch (c)
     {//z
     case 122 :
-        bougerPlatform(122);
-        break; //break oblige sinon faire toutes les instructions dessous!!??
-//s
+      bougerPlatform(122);
+      break; //break oblige sinon faire toutes les instructions dessous!!??
+      //s
     case 115 :
-        bougerPlatform(115);
-        break;
-//q
+      bougerPlatform(115);
+      break;
+      //q
     case 113:
-        bougerPlatform(113);
-        break;
-//d
+      bougerPlatform(113);
+      break;
+      //d
     case 100 :
-        bougerPlatform(100);
-        break;
-//e
+      bougerPlatform(100);
+      break;
+      //e
     case 101 :
-        bougerPlatform(101);
-        break;
+      bougerPlatform(101);
+      break;
     case 97 :
-        bougerPlatform(97);
-        break;
-//p
+      bougerPlatform(97);
+      break;
+      //p
     case 112 :
-        bougerPince(1);
-        break;
-//m
+      bougerPince(1);
+      break;
+      //m
     case 109 :
-        bougerPince(-1);
-        break;
-//c
+      bougerPince(-1);
+      break;
+      //c
     case 99 :
-        bougerBras(-1);
-        break;
-//v
+      bougerBras(-1);
+      break;
+      //v
     case 118 :
-        bougerBras(1);
-        break;
-//x
+      bougerBras(1);
+      break;
+      //x
     case 120 :
-        bougerBras(0);
-        break;
-//espace
- case 32 :
-        bougerPlatform(32);
-        break;
+      bougerBras(0);
+      break;
+      //espace
+    case ' ' :
+      bougerPlatform(32);
+      break;
     default    :
-         printf("%c[2K", 27); //si rien de bon, on efface la ligne
-        cout<<"\n\033[F";//on revient au debut de la ligne a chauque fois
+      std::cout<< "\027[2K" << "\n\033[F" << std::flush; //on revient au debut de la ligne a chauque fois
 
     }
 
@@ -232,30 +237,30 @@ void majValeurs()
 
 int main(int argc, char **argv) {
 
-    affichageMessageIntro();
-    char c = 0;
-    system("stty raw");//terminal lit direct ce qui rentre system("stty cooked"); pour revenir a la normale
+  affichageMessageIntro();
+  char c = 0;
+  system("stty raw");//terminal lit direct ce qui rentre system("stty cooked"); pour revenir a la normale
 
-	ros::init(argc, argv, "commande_clavier");
-	ros::NodeHandle n;
+  ros::init(argc, argv, "commande_clavier");
+  ros::NodeHandle n;
 
-	//Initialisation des Publishers
-	brasPublisher = n.advertise<brics_actuator::JointPositions>("arm_1/arm_controller/position_command", 1);//le 1 fait que ca efface l'instructions, le msg publlié des qu'un autre est envoyé au topic
-	pincePublisher = n.advertise<brics_actuator::JointPositions>("arm_1/gripper_controller/position_command", 1);
-	platformPublisher = n.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+  //Initialisation des Publishers
+  brasPublisher = n.advertise<brics_actuator::JointPositions>("arm_1/arm_controller/position_command", 1);//le 1 fait que ca efface l'instructions, le msg publlié des qu'un autre est envoyé au topic
+  pincePublisher = n.advertise<brics_actuator::JointPositions>("arm_1/gripper_controller/position_command", 1);
+  platformPublisher = n.advertise<geometry_msgs::Twist>("cmd_vel", 1);
 
 
-	ros::Rate loop_rate(10);
-	sleep(1); //Indispensable pour laisser le temps au bras d'initialiser
+  ros::Rate loop_rate(10);
+  ros::Duration(1).sleep(); //Indispensable pour laisser le temps au bras d'initialiser
 
-    while (ros::ok()){
-        c= getchar();
-        if(c==27){ros::shutdown();}
-        traitementInstruction(c);
-        loop_rate.sleep();
-    }
-        system("stty cooked");
-        return 0;
+  while (ros::ok()){
+    c= getchar();
+    if(c==27){ros::shutdown();}
+    traitementInstruction(c);
+    loop_rate.sleep();
+  }
+  system("stty cooked");
+  return 0;
 }
 
 
