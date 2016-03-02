@@ -169,6 +169,7 @@ int main(int argc, char **argv) {
 
     while (ros::ok()){
       c= getchar();
+      if(c==27){ros::shutdown();}
       traitementInstruction(c);//On modifie les angles theta
       if(validation_position(lesThetas)){
 	Miseajour();//On publie les modifications

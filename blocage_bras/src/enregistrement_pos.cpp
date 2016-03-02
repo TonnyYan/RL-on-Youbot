@@ -1,3 +1,5 @@
+//OBSOLETE -> Utiliser record_position.cpp
+
 #include "ros/ros.h"
 #include "boost/units/systems/si.hpp"
 #include "boost/units/io.hpp"
@@ -99,21 +101,21 @@ bool traitementInstruction(char c)
       if(lesThetas[0] + 0.1 > 0.0100692 && lesThetas[0] + 0.1 <  5.84014){
       lesThetas[0] += 0.1;
       }
-      else { cout<<"out of range \n";}
-        break; //break oblige sinon faire toutes les instructions dessous!!??
+      else { cout<<"out of range"<<endl;}
+        break;
 //s
     case 115 :
       if(lesThetas[0] - 0.1 > 0.0100692 && lesThetas[0] - 0.1 <  5.84014){
       lesThetas[0] -= 0.1;
       }
-else { cout<<"out of range \n";}
+else { cout<<"out of range"<<endl;}
         break;
 //e
     case 101:
  if(lesThetas[1] + 0.1 > 0.0100692 && lesThetas[1] + 0.1 < 2.61799){
       lesThetas[1] += 0.1;
  }
-else { cout<<"out of range \n";}
+else { cout<<"out of range"<<endl;}
         break;
 //d
     case 100 :
@@ -126,28 +128,28 @@ else { cout<<"out of range \n";}
  if(lesThetas[2] + 0.1 > -5.02655 && lesThetas[2] + 0.1 < -0.015708){
      lesThetas[2] += 0.1;
  }
-else { cout<<"out of range \n";}
+else { cout<<"out of range"<<endl;}
         break;
 //f   
  case 102 :
  if(lesThetas[2] - 0.1 > -5.02655 && lesThetas[2] - 0.1 < -0.015708){
     lesThetas[2] -= 0.1;
  }
-else { cout<<"out of range \n";}
+else { cout<<"out of range"<<endl;}
         break;
 //t
     case 116 :
  if(lesThetas[3] + 0.1 > 0.0221239 && lesThetas[3] + 0.1 < 3.4292 ){
        lesThetas[3] += 0.1;
  }
-else { cout<<"out of range \n";}
+else { cout<<"out of range"<<endl;}
         break;
 //g
     case 103 :
  if(lesThetas[3] - 0.1 > 0.0221239 && lesThetas[3] - 0.1 < 3.4292 ){
       lesThetas[3] -= 0.1;
  }
-else { cout<<"out of range \n";}
+ else { cout<<"out of range"<<endl;}
         break;
 
     default    :
