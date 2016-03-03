@@ -32,7 +32,7 @@ std::array<std::array<int, 1000>, 5> creationVecteur(){//Renvoie le vecteur de p
 		std::ifstream fichier(adresseTexte.c_str(), std::ios::in);
 		fichier.exceptions(std::ios::failbit | std::ios::badbit | std::ios::eofbit);//Test si erreur
 		for (auto& i : ref_points) {//On parcourt les 1000 lignes
-			for (int& j : i) {//On parcourt les 5 colonnes 
+			for (auto& j : i) {//On parcourt les 5 colonnes 
 				// i = lignes, j = colonnes
 				
 				//Remplir ref_points
