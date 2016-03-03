@@ -15,7 +15,7 @@
 ros::Publisher pub;
 ros::Subscriber sub;
 
-void callback(const sensor_msgs::JointState& msg)
+void callback(const brics_actuator::JointState& msg)
 {//Des nouvelles coordonnées ont été publiées
 
   //1) On parcourt la banque de points pour que pas trop dense
