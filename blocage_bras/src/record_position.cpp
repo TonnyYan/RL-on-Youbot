@@ -21,6 +21,7 @@ void callback(const sensor_msgs::JointState& msg)
   //1) On parcourt la banque de points pour que pas trop dense
   
   //Si Ok on l'enregistre
+  //  --> Utiliser la fonction push_back pour le rajouter
   ROS_INFO_STREAM("Coordonnée enregistrée");
 }
 
