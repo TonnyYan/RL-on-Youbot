@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <iostream>
 #include <stdlib.h>
+#include <string>
+#include <fstream>
 
 ros::Publisher pub;
 ros::Subscriber sub;
@@ -22,7 +24,30 @@ void callback(const sensor_msgs::JointState& msg)
   ROS_INFO_STREAM("Coordonnée enregistrée");
 }
 
+std::array<std::array<int, 1000>, 5> creationVecteur(){//Renvoie le vecteur de points
+	std::string ligne;
+	std::string adresseTexte = "donnees_points.txt";
+	std::array<std::array<int, 1000>, 5>  ref_points;
+	try {
+		std::ifstream fichier(adresseTexte.c_str(), std::ios::in);
+		fichier.exceptions(std::ios::failbit | std::ios::badbit | std::ios::eofbit);//Test si erreur
+		for (auto& i : ref_points) {//On parcourt les 1000 lignes
+			for (int& j : i) {//On parcourt les 5 colonnes 
+				// i = lignes, j = colonnes
+				
+				//Remplir ref_points
+				
+			}
+		}
+
+	}
+	catch (const std::exception& e) {
+	}
+	return ref_points;
+}
+
 int main(int argc, char **argv) {
+  std::array<std::array<int, 1000>, 5>  ref_points = creationVecteur();
   ros::init(argc, argv, "record_position");
   ros::NodeHandle n;
   pub = n.advertise<brics_actuator::JointPositions>("out", 1);
