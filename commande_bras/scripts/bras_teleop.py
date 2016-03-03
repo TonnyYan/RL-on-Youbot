@@ -20,11 +20,11 @@ def main(stdscr, persist):
     jointvalues = [theta1,theta2,theta3,theta4,theta5]
     keycode = -1
     stdscr.addstr("Command\n")
-    stdscr.addstr(" - z/s    : theta1 ++/--\n")
-    stdscr.addstr(" - e/d    : theta2 ++/--\n ")
-    stdscr.addstr(" - r/f    : theta3 ++/--\n")
-    stdscr.addstr(" - t/g    : theta4 ++/--\n")
-    stdscr.addstr(" - ESC    : exit\n")
+    stdscr.addstr("- z/s    : theta1 ++/--\n")
+    stdscr.addstr("- e/d    : theta2 ++/--\n")
+    stdscr.addstr("- r/f    : theta3 ++/--\n")
+    stdscr.addstr("- t/g    : theta4 ++/--\n")
+    stdscr.addstr("- ESC    : exit\n")
     # We will wait for 100 ms for a key to be pressed
     if(persist): stdscr.timeout(100)
     while (not rospy.is_shutdown()) and (keycode != 27): # 27 is escape
