@@ -12,7 +12,7 @@
 ros::Publisher pub;
 ros::Subscriber sub;
 
-void callback(const sensor_msgs::JointPositions& msg)
+void callback(const brics_actuator::JointPositions& msg)
 {//Des nouvelles coordonnées ont été publiées
 
   //1) On vérifie qu'il est dans les bornes constructeur
@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
   ros::NodeHandle n;
   pub = n.advertise<brics_actuator::JointPositions>("out", 1);
   sub = n.subscribe("in",1,callback);
-  ros::Rate loop_rate(10);
+  ros::Rate r(10);
   sleep(1);
   while (ros::ok())
     { ros::spinOnce();

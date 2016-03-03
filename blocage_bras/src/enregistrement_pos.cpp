@@ -113,48 +113,28 @@ bool Sauvegarde(){
 bool traitementInstruction(char c)
 {
 
-  switch (c)
-    {//z
+  switch (c) {//z
     case 122 :
       if(lesThetas[0] + 0.1 > 0.0100692 && lesThetas[0] + 0.1 <  5.84014){
 	lesThetas[0] += 0.1;
       }
-<<<<<<< HEAD
-      else { cout<<"out of range"<<endl;}
-        break;
-//s
-=======
-      else { cout<<"out of range \n";}
-      break; //break oblige sinon faire toutes les instructions dessous!!??
-      //s
->>>>>>> ef396e83caabc5a2b19e536e3fb041aa2069a6ce
+      else { cout<<"out of range"<<endl;
+      }
+      break;
     case 115 :
       if(lesThetas[0] - 0.1 > 0.0100692 && lesThetas[0] - 0.1 <  5.84014){
 	lesThetas[0] -= 0.1;
       }
-<<<<<<< HEAD
-else { cout<<"out of range"<<endl;}
-        break;
-//e
-    case 101:
- if(lesThetas[1] + 0.1 > 0.0100692 && lesThetas[1] + 0.1 < 2.61799){
-      lesThetas[1] += 0.1;
- }
-else { cout<<"out of range"<<endl;}
-        break;
-//d
-=======
-      else { cout<<"out of range \n";}
+      else { cout<<"out of range"<<endl;}
       break;
       //e
     case 101:
       if(lesThetas[1] + 0.1 > 0.0100692 && lesThetas[1] + 0.1 < 2.61799){
 	lesThetas[1] += 0.1;
       }
-      else { cout<<"out of range \n";}
+      else { cout<<"out of range"<<endl;}
       break;
       //d
->>>>>>> ef396e83caabc5a2b19e536e3fb041aa2069a6ce
     case 100 :
       if(lesThetas[1] - 0.1 > 0.0100692 && lesThetas[1] - 0.1 < 2.61799){
 	lesThetas[1] -= 0.1;
@@ -162,62 +142,38 @@ else { cout<<"out of range"<<endl;}
       break;
       //r
     case 114 :
-<<<<<<< HEAD
- if(lesThetas[2] + 0.1 > -5.02655 && lesThetas[2] + 0.1 < -0.015708){
-     lesThetas[2] += 0.1;
- }
-else { cout<<"out of range"<<endl;}
-        break;
-//f   
- case 102 :
- if(lesThetas[2] - 0.1 > -5.02655 && lesThetas[2] - 0.1 < -0.015708){
-    lesThetas[2] -= 0.1;
- }
-else { cout<<"out of range"<<endl;}
-        break;
-//t
-    case 116 :
- if(lesThetas[3] + 0.1 > 0.0221239 && lesThetas[3] + 0.1 < 3.4292 ){
-       lesThetas[3] += 0.1;
- }
-else { cout<<"out of range"<<endl;}
-        break;
-//g
-    case 103 :
- if(lesThetas[3] - 0.1 > 0.0221239 && lesThetas[3] - 0.1 < 3.4292 ){
-      lesThetas[3] -= 0.1;
- }
- else { cout<<"out of range"<<endl;}
-        break;
-=======
       if(lesThetas[2] + 0.1 > -5.02655 && lesThetas[2] + 0.1 < -0.015708){
 	lesThetas[2] += 0.1;
       }
-      else { cout<<"out of range \n";}
+      else { cout<<"out of range"<<endl;}
       break;
       //f   
     case 102 :
       if(lesThetas[2] - 0.1 > -5.02655 && lesThetas[2] - 0.1 < -0.015708){
 	lesThetas[2] -= 0.1;
       }
-      else { cout<<"out of range \n";}
+      else { cout<<"out of range"<<endl;}
       break;
       //t
     case 116 :
       if(lesThetas[3] + 0.1 > 0.0221239 && lesThetas[3] + 0.1 < 3.4292 ){
 	lesThetas[3] += 0.1;
       }
-      else { cout<<"out of range \n";}
+      else { cout<<"out of range"<<endl;}
       break;
       //g
     case 103 :
       if(lesThetas[3] - 0.1 > 0.0221239 && lesThetas[3] - 0.1 < 3.4292 ){
 	lesThetas[3] -= 0.1;
       }
+      else { cout<<"out of range"<<endl;}
+      break;
+      if(lesThetas[2] + 0.1 > -5.02655 && lesThetas[2] + 0.1 < -0.015708){
+	lesThetas[2] += 0.1;
+      }
       else { cout<<"out of range \n";}
       break;
->>>>>>> ef396e83caabc5a2b19e536e3fb041aa2069a6ce
-
+      //f   
     default    :
       printf("%c[2K", 27); //si rien de bon, on efface la ligne
       cout<<"\n\033[F";//on revient au debut de la ligne a chauque fois
