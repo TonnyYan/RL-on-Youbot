@@ -43,6 +43,7 @@ std::array<std::array<int, 1000>, 5> creationVecteur(){//Renvoie le vecteur de p
 
 	}
 	catch (const std::exception& e) {
+	ROS_INFO_STREAM("ERREUR Ouverture Fichier");
 	}
 	return ref_points;
 }
