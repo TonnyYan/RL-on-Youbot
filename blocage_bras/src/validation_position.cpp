@@ -15,7 +15,12 @@ ros::Subscriber sub;
 void callback(const sensor_msgs::JointPositions& msg)
 {//Des nouvelles coordonnées ont été publiées
 
-  //1) On calcule la distance avec le point le plus proche
+  //1) On vérifie qu'il est dans les bornes constructeur
+// Cf Frezza ->  void in_bounds() {
+//     if(angles[0]<.2) angles[0] = .2;
+//   }
+
+  //2) On calcule la distance avec le point le plus proche
   
   //Si ok on publie
   pub.publish(msg);
