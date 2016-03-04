@@ -48,11 +48,11 @@ void bougerBras(int i) {
 
 
 
-    // jointvalues[0] = 2.95;//Rotation de la base
-    // jointvalues[1] = 0.11;//Valeurs par défaut de calibration
-    // jointvalues[2] = -0.11;
-    // jointvalues[3] = 0.11;
-    // jointvalues[4] = 0.111;
+  // jointvalues[0] = 2.95;//Rotation de la base
+  // jointvalues[1] = 0.11;//Valeurs par défaut de calibration
+  // jointvalues[2] = -0.11;
+  // jointvalues[3] = 0.11;
+  // jointvalues[4] = 0.111;
     
 
   switch (i) {
