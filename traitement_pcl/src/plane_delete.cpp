@@ -14,14 +14,18 @@
 #include <pcl/sample_consensus/method_types.h>
 #include <pcl/sample_consensus/model_types.h>
 #include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/io/pcd_io.h>
 #include <iostream>
 
 void callback(ros::Publisher& pub,
 	      const sensor_msgs::PointCloud2ConstPtr& input) {
-  //Conversion
+  //Conversion 
   pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::fromROSMsg(*input, *cloud);
-  
+
   //Segmentation Planaire du nuage de points
   //Variables pour la segmentation
   pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
@@ -42,6 +46,51 @@ void callback(ros::Publisher& pub,
 	    << coefficients->values[1] << " "
 	    << coefficients->values[2] << " " 
 	    << coefficients->values[3] << std::endl;
+
+  //On ne va garder qu'un extrait
+  pcl::ExtractIndices<pcl::PointXYZ> extract;
+
+  int i = 0
+  int nr_points = (int) cloud->points.size ();
+  // While 20% of the original cloud is still there
+  while (cloud_filtered->points.size () > 0.2* nr_points)
+    {
+      // Segment the largest planar component from the remaining cloud
+      seg.setInputCloud (cloud);
+      seg.segment (*inliers, *coefficients);
+      if (inliers->indices.size () == 0)
+	{
+	  std::cerr << "Could not estimate a planar model for the given dataset." << std::endl;
+	  break;
+	}
+
+      // Extract the inliers
+      extract.setInputCloud (cloud);
+      extract.setIndices (inliers);
+      extract.setNegative (false);
+      extract.filter (*cloud_p);
+      std::cerr << "PointCloud representing the planar component: " << cloud_p->width * cloud_p->height << " data points." << std::endl;
+
+      std::stringstream ss;
+      ss << "table_scene_lms400_plane_" << i << ".pcd";
+      writer.write<pcl::PointXYZ> (ss.str (), *cloud_p, false);
+
+      // Create the filtering object
+      extract.setNegative (true);
+      extract.filter (*cloud_f);
+      cloud_filtered.swap (cloud_f);
+      i++;
+    }
+
+
+  pcl::PointCloud<pcl::PointXYZ> points_out;
+  // We publish the result.
+  pcl::toPCLPointCloud2(points_out, points_2);
+  sensor_msgs::PointCloud2 output;
+  pcl_conversions::fromPCL(points_2,output);
+  output.header.stamp    = ros::Time::now();
+  output.header.frame_id = "/map"; // This is the default frame in RViz
+  pub.publish(output);
 
 }
 
