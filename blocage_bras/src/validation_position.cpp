@@ -23,8 +23,8 @@ std::vector<std::array<double, 4>> ref_points;//Les points de référence
 
 double distance(const std::array<double,4>coord1, const std::array<double,4> coord2) {
   double distance = sqrt(pow((coord1[0]-coord2[0]),2)+pow((coord1[1]-coord2[1]),2)+pow((coord1[2]-coord2[2]),2)+pow((coord1[3]-coord2[3]),2));
-return distance;
- }
+  return distance;
+}
 
 double string_to_double( const std::string& s )
 {
@@ -39,13 +39,20 @@ double string_to_double( const std::string& s )
 void callback(const brics_actuator::JointPositions& msg)
 {//Des nouvelles coordonnées ont été publiées
   std::array<double,4> coord_recues = {msg.positions[0].value, msg.positions[1].value, msg.positions[2].value, msg.positions[3].value};
-  double distance_min(1000);
+  double distance_min = 1000;
+  std::array<double,4>  pt_plusproche;
   for(auto& elt : ref_points){
-    if(distance(elt,coord_recues)<distance_min)
-      distance_min = distance(elt,coord_recues);
+    if(distance(elt,coord_recues)<distance_min){ 
+        distance_min = distance(elt,coord_recues);
+	pt_plusproche = elt;
+      }
   }
+  bool cond0(coord_recues[0]-pt_plusproche[0]<0.3);
+  bool cond1(coord_recues[1]-pt_plusproche[1]<0.3);
+  bool cond2(coord_recues[2]-pt_plusproche[2]<0.3);
+  bool cond3(coord_recues[3]-pt_plusproche[3]<0.3);
   std::cout << "Distance min :" << distance_min << std::endl;
-  bool point_valide = (distance_min<0.3);
+  bool point_valide = (distance_min<1  && cond0 && cond1 && cond2 && cond3);
   if(point_valide) pub.publish(msg);
 }
 

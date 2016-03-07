@@ -50,7 +50,7 @@ void callback(const brics_actuator::JointPositions& msg)
     if(distance(elt,coord_recues)<distance_min)
       distance_min = distance(elt,coord_recues);
   }
-  point_valide = (distance_min>0.1);
+  point_valide = (distance_min>0.05);
   //Si Ok on l'enregistre
   if(point_valide){
  try {
