@@ -131,14 +131,18 @@ include_directories(
  add_executable(enregistrement_pos src/enregistrement_pos.cpp)
  add_executable(test_position src/test_position.cpp)
  add_executable(validation_position src/validation_position.cpp)
-
+ add_executable(record_position src/record_position.cpp)
+ target_compile_options(record_position PUBLIC -std=c++11)
+ target_compile_options(validation_position PUBLIC -std=c++11)
+ target_compile_options(test_position PUBLIC -std=c++11)
+ target_compile_options(enregistrement_pos PUBLIC -std=c++11)
 
 ## Add cmake target dependencies of the executable
 ## same as for the library above
  add_dependencies(enregistrement_pos enregistrement_pos_generate_messages_cpp)
  add_dependencies(test_position test_position_generate_messages_cpp)
  add_dependencies(validation_position validation_position_generate_messages_cpp)
-
+ add_dependencies(record_position record_position_generate_messages_cpp)
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(enregistrement_pos
@@ -150,7 +154,9 @@ target_link_libraries(test_position
 target_link_libraries(validation_position
    ${catkin_LIBRARIES}
  )
-
+target_link_libraries(record_position
+   ${catkin_LIBRARIES}
+ )
 
 #############
 ## Install ##

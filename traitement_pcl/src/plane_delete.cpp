@@ -50,10 +50,10 @@ void callback(ros::Publisher& pub,
   //On ne va garder qu'un extrait
   pcl::ExtractIndices<pcl::PointXYZ> extract;
 
-  int i = 0
+  int i = 0;
   int nr_points = (int) cloud->points.size ();
   // While 20% of the original cloud is still there
-  while (cloud_filtered->points.size () > 0.2* nr_points)
+  while (cloud->points.size () > 0.2* nr_points)
     {
       // Segment the largest planar component from the remaining cloud
       seg.setInputCloud (cloud);
@@ -63,7 +63,7 @@ void callback(ros::Publisher& pub,
 	  std::cerr << "Could not estimate a planar model for the given dataset." << std::endl;
 	  break;
 	}
-
+      
       // Extract the inliers
       extract.setInputCloud (cloud);
       extract.setIndices (inliers);
@@ -91,7 +91,7 @@ void callback(ros::Publisher& pub,
   output.header.stamp    = ros::Time::now();
   output.header.frame_id = "/map"; // This is the default frame in RViz
   pub.publish(output);
-
+      
 }
 
 int main(int argc, char **argv) {

@@ -11,50 +11,98 @@
 #include <stdlib.h>
 #include <string>
 #include <fstream>
+#include <array>
+#include <cmath>
 
-ros::Publisher pub;
 ros::Subscriber sub;
 
-void callback(const brics_actuator::JointState& msg)
-{//Des nouvelles coordonnées ont été publiées
+std::string adresseTexte ="//usr//users//promo2017//bordogna_rem//catkin_ws//src//blocage_bras//donnees_points.txt";
 
-  //1) On parcourt la banque de points pour que pas trop dense
-  
-  //Si Ok on l'enregistre
-  //  --> Utiliser la fonction push_back pour le rajouter dans ref_points
-  ROS_INFO_STREAM("Coordonnée enregistrée");
+std::vector<std::array<double, 4>> ref_points;//Les points de référence
+
+//Redéfinition de l'opérateur "<<"
+std::ostream& operator<<(std::ostream& os, const std::array<double,4> coord_recues) {
+  os << coord_recues[0] << ' ' << coord_recues[1] << ' ' <<  coord_recues[2] << ' ' << coord_recues[3]<<std::endl;
+ }
+
+double distance(const std::array<double,4>coord1, const std::array<double,4> coord2) {
+  double distance = sqrt(pow((coord1[0]-coord2[0]),2)+pow((coord1[1]-coord2[1]),2)+pow((coord1[2]-coord2[2]),2)+pow((coord1[3]-coord2[3]),2));
+return distance;
+ }
+
+double string_to_double( const std::string& s )
+{
+  std::istringstream i(s);
+  double x;
+  if (!(i >> x))
+    return 0;
+  return x;
 }
 
-std::array<std::array<int, 1000>, 5> creationVecteur(){//Renvoie le vecteur de points
-	std::string ligne;
-	std::string adresseTexte = "donnees_points.txt";
-	std::array<std::array<int, 1000>, 5>  ref_points;
-	try {
-		std::ifstream fichier(adresseTexte.c_str(), std::ios::in);
-		fichier.exceptions(std::ios::failbit | std::ios::badbit | std::ios::eofbit);//Test si erreur
-		for (auto& i : ref_points) {//On parcourt les 1000 lignes
-			for (auto& j : i) {//On parcourt les 5 colonnes 
-				// i = lignes, j = colonnes
-				
-				//Remplir ref_points
-				
-			}
-		}
+void callback(const brics_actuator::JointPositions& msg)
+{//Des nouvelles coordonnées ont été publiées
+  std::array<double,4> coord_recues = {msg.positions[0].value, msg.positions[1].value, msg.positions[2].value, msg.positions[3].value};
 
-	}
-	catch (const std::exception& e) {
-	ROS_INFO_STREAM("ERREUR Ouverture Fichier");
-	}
-	return ref_points;
+  //1) On parcourt la banque de points pour que pas trop dense
+  bool point_valide(false);
+  double distance_min(1000);
+  for(auto& elt : ref_points){
+    if(distance(elt,coord_recues)<distance_min)
+      distance_min = distance(elt,coord_recues);
+  }
+  point_valide = (distance_min>0.1);
+  //Si Ok on l'enregistre
+  if(point_valide){
+ try {
+   std::ofstream fichier(adresseTexte, std::ios::out | std::ios::app); 
+   // fichier.exceptions(std::ios::failbit | std::ios::badbit | std::ios::eofbit);//Test si erreur
+    fichier << coord_recues;
+    fichier.close();
+    ref_points.push_back(coord_recues);
+    ROS_INFO_STREAM("Coordonnee enregistree");
+  }
+  catch (const std::exception& e) {
+    ROS_INFO_STREAM("ERREUR Ouverture Fichier");
+  }
+}
+}
+
+std::vector<std::array<double,4>> creationVecteur(){//Renvoie le vecteur de points
+  std::string ligne;
+  std:: string nb="";
+  std::vector<std::array<double, 4>>  ref_points;
+  try {
+    std::ifstream fichier(adresseTexte.c_str(), std::ios::in);    
+    //  fichier.exceptions(std::ios::failbit | std::ios::badbit | std::ios::eofbit);//Test si erreur
+    while(getline(fichier,ligne)){
+      std::array<double, 4> uneLigne;
+      for(int i =0; i<5; i++){nb=nb+ligne[i];}
+      uneLigne[0]=string_to_double(nb);
+      nb="";
+      for(int i =6; i<10; i++){nb=nb+ligne[i];}
+      uneLigne[1]=string_to_double(nb);
+      nb="";
+      for(int i =12; i<16; i++){nb=nb+ligne[i];}
+      uneLigne[2]=string_to_double(nb);
+      nb="";
+      for(int i =17; i<21; i++){nb=nb+ligne[i];}
+      uneLigne[3]=string_to_double(nb);
+      nb="";
+      ref_points.push_back(uneLigne);
+    }
+  }
+  catch (const std::exception& e) {
+    ROS_INFO_STREAM("ERREUR Ouverture Fichier");
+  }
+  return ref_points;
 }
 
 int main(int argc, char **argv) {
-  std::array<std::array<int, 1000>, 5>  ref_points = creationVecteur();
+  ref_points = creationVecteur();
   ros::init(argc, argv, "record_position");
   ros::NodeHandle n;
-  pub = n.advertise<brics_actuator::JointPositions>("out", 1);
   sub = n.subscribe("in",1,callback);
-  ros::Rate loop_rate(10);
+  ros::Rate r(10);
   sleep(1);
   while (ros::ok())
     { ros::spinOnce();
