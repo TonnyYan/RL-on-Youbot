@@ -23,7 +23,8 @@
 void callback(ros::Publisher& pub,
 	      const sensor_msgs::PointCloud2ConstPtr& input) {
   //Conversion 
-  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>), cloud_p(new pcl::PointCloud<pcl::PointXYZ>), cloud_f (new pcl::PointCloud<pcl::PointXYZ>),cloud_filtered (new pcl::PointCloud<pcl::PointXYZ>);
+  //cloud = pcl en entrée, cloud_p = pcl du plan, cloud_f = pcl du filtre
   pcl::fromROSMsg(*input, *cloud);
 
   //Segmentation Planaire du nuage de points
@@ -53,7 +54,7 @@ void callback(ros::Publisher& pub,
   int i = 0;
   int nr_points = (int) cloud->points.size ();
   // While 20% of the original cloud is still there
-  while (cloud->points.size () > 0.2* nr_points)
+  while (cloud->points.size () > 0.95* nr_points)
     {
       // Segment the largest planar component from the remaining cloud
       seg.setInputCloud (cloud);
@@ -69,27 +70,23 @@ void callback(ros::Publisher& pub,
       extract.setIndices (inliers);
       extract.setNegative (false);
       extract.filter (*cloud_p);
-      std::cerr << "PointCloud representing the planar component: " << cloud_p->width * cloud_p->height << " data points." << std::endl;
-
-      std::stringstream ss;
-      ss << "table_scene_lms400_plane_" << i << ".pcd";
-      writer.write<pcl::PointXYZ> (ss.str (), *cloud_p, false);
 
       // Create the filtering object
       extract.setNegative (true);
       extract.filter (*cloud_f);
-      cloud_filtered.swap (cloud_f);
+      cloud.swap (cloud_f);
       i++;
     }
 
-
-  pcl::PointCloud<pcl::PointXYZ> points_out;
+  std::cout << "Publie" << std::endl;
   // We publish the result.
-  pcl::toPCLPointCloud2(points_out, points_2);
+  pcl::PCLPointCloud2 points_out;
+  std::cout<<cloud->width <<std::endl;
+  pcl::toPCLPointCloud2(*cloud,points_out);
   sensor_msgs::PointCloud2 output;
-  pcl_conversions::fromPCL(points_2,output);
-  output.header.stamp    = ros::Time::now();
-  output.header.frame_id = "/map"; // This is the default frame in RViz
+  pcl_conversions::fromPCL(points_out,output);
+  output.header.stamp = ros::Time::now();
+  output.header.frame_id = "/camera_link"; // Frame dans Rviz
   pub.publish(output);
       
 }
