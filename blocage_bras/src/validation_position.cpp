@@ -16,7 +16,7 @@
 #include <functional>
 #include <cmath>
 
-#define  MIN_DIST_THRESHOLD 1
+#define  MIN_DIST_THRESHOLD .3
 
 ros::Publisher pub;
 ros::Subscriber sub;
@@ -38,9 +38,6 @@ std::istream& operator>>(std::istream& is, Joints& coord_recues) {
 
 inline double sqr(double x) {return  x*x;}
 
-double distance2(const Joints& coord1, const Joints coord2) {
-  return sqr(coord1[0]-coord2[0])+sqr(coord1[1]-coord2[1])+sqr(coord1[2]-coord2[2])+sqr(coord1[3]-coord2[3]);
-}
 double string_to_double( const std::string& s )
 {
   std::istringstream i(s);
@@ -51,7 +48,7 @@ double string_to_double( const std::string& s )
 }
 
 void callback(JointsSet& collection, const brics_actuator::JointPositionsConstPtr& msg) {
-//Des nouvelles coordonnées ont été publiées
+  //Des nouvelles coordonnées ont été publiées
   Joints coord_recues = {
     msg->positions[0].value, 
     msg->positions[1].value, 
@@ -59,23 +56,22 @@ void callback(JointsSet& collection, const brics_actuator::JointPositionsConstPt
     msg->positions[3].value
   };
 
-  auto pt_plusproche = std::min_element(collection.begin(), collection.end(),
-					boost::bind(distance2,std::ref(coord_recues),_1));
+  bool pointvalide(false);
+  for(auto& elt : collection){
+    if(  (std::abs(coord_recues[0]-elt[0])< MIN_DIST_THRESHOLD)
+	 && (std::abs(coord_recues[1]-elt[1])< MIN_DIST_THRESHOLD) 
+	 && (std::abs(coord_recues[2]-elt[2])< MIN_DIST_THRESHOLD)
+	 && (std::abs(coord_recues[3]-elt[3])< MIN_DIST_THRESHOLD) ){
+      pointvalide = true;
+      break;
+    }
+  }
 
-  Joints distances = {
-    std::abs(coord_recues[0]-*pt_plusproche[0]),
-    std::abs(coord_recues[1]-*pt_plusproche[1]),
-    std::abs(coord_recues[2]-*pt_plusproche[2]),
-    std::abs(coord_recues[3]-*pt_plusproche[3])
-  };
-  bool cond0(distances[0]< MIN_DIST_THRESHOLD);
-  bool cond1(distances[1]< MIN_DIST_THRESHOLD);
-  bool cond2(distances[2]< MIN_DIST_THRESHOLD);
-  bool cond3(distances[3]< MIN_DIST_THRESHOLD);
-  
-  if(cond0 && cond1 && cond2 && cond3) {
-    std::cout << "Distances : "<< distances << std::endl;
+  if(pointvalide) {
+    std::cout << "Point Valide" << std::endl;
     pub.publish(msg);
+  }else{
+    std::cout << "Point Non Valide "<< std::endl;
   }
 }
 

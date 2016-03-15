@@ -5,6 +5,7 @@ find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
   PCL REQUIRED
+  tf
 )
 
 catkin_package(

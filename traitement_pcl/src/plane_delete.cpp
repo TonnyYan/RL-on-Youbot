@@ -20,11 +20,11 @@
 #include <pcl/io/pcd_io.h>
 #include <iostream>
 #include <tf/transform_broadcaster.h>
+#include <pcl/common/centroid.h>
 
 #define DISTANCE_THRESH .05
 #define CLOUD_PERCENTAGE .3
 
-static tf::TransformBroadcaster broadcaster;
 
 void callback(ros::Publisher& pub, const sensor_msgs::PointCloud2ConstPtr& input) {
 
@@ -67,7 +67,7 @@ pcl::ExtractIndices<pcl::PointXYZ> extract;
 
 int i = 0;
 int nr_points = (int) cloud_filtered->points.size ();
-// While 20% of the original cloud is still there
+// While 30% of the original cloud is still there
 while (cloud_filtered->points.size () > CLOUD_PERCENTAGE* nr_points)
   {
 // Segment the largest planar component from the remaining cloud
@@ -92,6 +92,15 @@ cloud_filtered.swap (cloud_f);
 i++;
 }
 
+
+// Object to store the centroid coordinates.
+Eigen::Vector4f centroid;
+pcl::compute3DCentroid(*cloud_filtered, centroid);
+std::cout << "The XYZ coordinates of the centroid are: ("
+			  << centroid[0] << ", "
+			  << centroid[1] << ", "
+			  << centroid[2] << ")." << std::endl;
+
 std::cout << "Publie" << std::endl;
 // We publish the result.
 pcl::PCLPointCloud2 points_out;
@@ -99,11 +108,17 @@ std::cout<<cloud_filtered->width <<std::endl;
 pcl::toPCLPointCloud2(*cloud_filtered,points_out);
 sensor_msgs::PointCloud2 output;
 pcl_conversions::fromPCL(points_out,output);
-broadcaster.sendTransform(
-tf::StampedTransform(
-tf::Transform(tf::Quaternion( 0, 0, 0.7071, 0.7071), tf::Vector3(0.0, 0.0, 0.0)),
-  ros::Time::now(),"/camera_link", "/base_kinect"));
 
+
+
+ tf::TransformBroadcaster broadcaster;
+ broadcaster.sendTransform(tf::StampedTransform(tf::Transform(
+							      tf::Quaternion( 0, 0, 0.7071, 0.7071),
+							      tf::Vector3(0.0, 0.0, 0.0)),
+						ros::Time::now(),
+						"/camera_link",
+						"/base_kinect"));
+//On publie la tf de base_kinect par rapport à camera_link
 
 output.header.stamp = ros::Time::now();
 output.header.frame_id = "/base_kinect";
