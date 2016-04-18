@@ -2,6 +2,7 @@
 #include "boost/units/systems/si.hpp"
 #include "boost/units/io.hpp"
 #include "brics_actuator/JointPositions.h"
+#include "geometry_msgs/Twist.h"
 #include <stdio.h>
 #include <iostream>
 #include <stdlib.h>
@@ -13,8 +14,13 @@
 #include <functional>
 #include <cmath>
 
+//TODO : 
+//Résoudre pb Etat constructeur
+//Remplir le main
+//Kinect vecteur r
 
 ros::Publisher pub;
+ros::Publisher movebase;
 ros::Subscriber sub;
 
 #define NB_TESTS_ALEATOIRES 10
@@ -104,10 +110,17 @@ Thetas creationThetaRandom(){
   return thetarandom;
 }
 
-//fonction qui bouge la base random en publiant sur le topic /out/base 
-//????? on utilise move_base ou commande_clavier 
+//fonction qui bouge la base random en publiant sur le topic /out/base
 void  moveBaseRandom(){
-  //a completer
+  geometry_msgs::Twist twist;
+  twist.linear.x = rand()/5-0.1;
+  twist.linear.y = rand()/5-0.1;
+  movebase.publish(twist);
+  ros::Duration(0.5).sleep();
+  twist.linear.x = 0;
+  twist.linear.y = 0;
+  movebase.publish(twist);
+  ros::Duration(0.5).sleep();
 }
 
 
@@ -152,37 +165,20 @@ Thetas  mvtAleatoire(Rayon r,Thetas& theta, Rayon rmin,Thetas& dthetamin){
   Thetas dthetaprim;
   /*Rayon newrmin= rmin;
     Thetas newdthetamin= dthetamin;*/
-  Rayon newrmin;
-  newrmin[0]=rmin[0];
-  newrmin[1]=rmin[1];
-  newrmin[2]=rmin[2];
-  Thetas newdthetamin;
-  newdthetamin[0]=dthetamin[0];
-  newdthetamin[1]=dthetamin[1];
-  newdthetamin[2]=dthetamin[2];
-  newdthetamin[3]=dthetamin[3];
-  newdthetamin[4]=dthetamin[4];
-  Thetas epsilon;
-  epsilon[0]=0;
-  epsilon[1]=0;
-  epsilon[2]=0;
-  epsilon[3]=0;
-  epsilon[4]=0;
+  Rayon newrmin =  rmin;
+  Thetas newdthetamin = dthetamin;
+  Thetas epsilon= {0,0,0,0,0};
   for(int i =0;i< NB_TESTS_ALEATOIRES;i++){
     //modification de dtheta
-    /* dthetaprim[0] = dthetamin[0]+0;
-       dthetaprim[1] = dthetamin[1]+0;
-       dthetaprim[2] = dthetamin[2]+0;
-       dthetaprim[3] = dthetamin[3]+0;*/
     dthetaprim = dthetamin+epsilon;
     //on bouge de dthetaprim
     move(dthetaprim+theta);
     //on regarde la nouvelle valeur de r
-    rprim   = vecteur_kinnect_objet();
+    rprim  = vecteur_kinnect_objet();
     //si rprim < rmin alors mise a jour de dthetamin et rmin
     if(norme(rprim)<norme(newrmin)){
       newrmin = rprim;
-      newdthetamin = dthetaprim;
+      newdthetamin = dthetaprim; 
     }
   }
   return newdthetamin;
@@ -192,7 +188,7 @@ Thetas  mvtAleatoire(Rayon r,Thetas& theta, Rayon rmin,Thetas& dthetamin){
 void apprentissageAleatoire(){
   Thetas thetarandom;
   Thetas dtheta;
- Thetas dthetamin;
+  Thetas dthetamin;
   Rayon rmin;
   Rayon r;
   std::cout<<"Nouvelle boucle mise a jour de f"<<std::endl;
@@ -205,11 +201,7 @@ void apprentissageAleatoire(){
     r = vecteur_kinnect_objet();
     //on bouge le bras de dtheta que le programme a prévu i.e. f(thetarandom,r) et on regarde rmin qui est atteint avec le programme
     // dtheta = 0; //f=0
-    dtheta[0]=0;
-    dtheta[1]=0;
-    dtheta[2]=0;
-    dtheta[3]=0;
-    dtheta[4]=0;
+    dtheta = {0,0,0,0,0};
     move(thetarandom+dtheta);
     rmin = vecteur_kinnect_objet();
 
@@ -221,7 +213,6 @@ void apprentissageAleatoire(){
     //pb ici!    BaseEtats baseEtats.pushback(etat);
     std::cout<<"Amelioration dthetas :  "<<dtheta<<std::endl;
   }
-
   //histoire du gaml avec mise a jour de f=learn(baseEtats)
   std::cout<<"mise a jour de f"<<std::endl;
 }
@@ -231,6 +222,7 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "learning_follow");
   ros::NodeHandle n;
   pub = n.advertise<brics_actuator::JointPositions>("out/positions", 1);
+  movebase = n.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   ros::Rate r(10);
   sleep(1);
   while (ros::ok())

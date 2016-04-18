@@ -17,6 +17,8 @@ add_definitions(${PCL_DEFINITIONS})
 add_executable(plane_delete src/plane_delete.cpp)
 
 add_dependencies(plane_delete plane_delete_generate_messages_cpp)
+
 target_link_libraries(plane_delete ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+w
 
 

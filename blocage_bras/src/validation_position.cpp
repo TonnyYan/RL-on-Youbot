@@ -2,6 +2,7 @@
 //afin de ne publier que celles qui ne le mettent pas en danger
 
 #include "ros/ros.h"
+#include "std_msgs/String.h"
 #include "boost/units/systems/si.hpp"
 #include "boost/units/io.hpp"
 #include "brics_actuator/JointPositions.h"
@@ -16,36 +17,16 @@
 #include <functional>
 #include <cmath>
 
-#define  MIN_DIST_THRESHOLD .3
+#include "joints.hpp"
+
+#define  MIN_DIST_THRESHOLD .4
 
 ros::Publisher pub;
+ros::Publisher feedback;
 ros::Subscriber sub;
 
 std::string adresseTexte ="/usr/users/promo2017/germain_hug/catkin_ws/src/blocage_bras/donnees_points.txt";
 
-typedef std::array<double, 4> Joints;
-typedef std::vector<Joints>   JointsSet;
-
-std::ostream& operator<<(std::ostream& os, const Joints& coord_recues) {
-  os << coord_recues[0] << ' ' << coord_recues[1] << ' ' <<  coord_recues[2] << ' ' << coord_recues[3];
-  return os;
-}
-
-std::istream& operator>>(std::istream& is, Joints& coord_recues) {
-  is >> coord_recues[0] >> coord_recues[1] >> coord_recues[2] >> coord_recues[3];
-  return is;
-}
-
-inline double sqr(double x) {return  x*x;}
-
-double string_to_double( const std::string& s )
-{
-  std::istringstream i(s);
-  double x;
-  if (!(i >> x))
-    return 0;
-  return x;
-}
 
 void callback(JointsSet& collection, const brics_actuator::JointPositionsConstPtr& msg) {
   //Des nouvelles coordonnées ont été publiées
@@ -56,13 +37,13 @@ void callback(JointsSet& collection, const brics_actuator::JointPositionsConstPt
     msg->positions[3].value
   };
 
-  bool pointvalide(false);
+  bool pointvalide(true);
+  double d = 0;
   for(auto& elt : collection){
-    if(  (std::abs(coord_recues[0]-elt[0])< MIN_DIST_THRESHOLD)
-	 && (std::abs(coord_recues[1]-elt[1])< MIN_DIST_THRESHOLD) 
-	 && (std::abs(coord_recues[2]-elt[2])< MIN_DIST_THRESHOLD)
-	 && (std::abs(coord_recues[3]-elt[3])< MIN_DIST_THRESHOLD) ){
-      pointvalide = true;
+    if( distance2(elt,coord_recues) < MIN_DIST_THRESHOLD*MIN_DIST_THRESHOLD){
+      //SI on est trop près d'un point interdit, on se bloque
+      pointvalide = false;
+      d =  distance2(elt,coord_recues);
       break;
     }
   }
@@ -70,8 +51,14 @@ void callback(JointsSet& collection, const brics_actuator::JointPositionsConstPt
   if(pointvalide) {
     std::cout << "Point Valide" << std::endl;
     pub.publish(msg);
+    std_msgs::StringPtr str(new std_msgs::String);
+    str->data = "1";
+    feedback.publish(str);
   }else{
     std::cout << "Point Non Valide "<< std::endl;
+    std_msgs::StringPtr str(new std_msgs::String);
+    str->data = "0";
+    feedback.publish(str);
   }
 }
 
@@ -103,13 +90,14 @@ int main(int argc, char **argv) {
   JointsSet ref_points = creationVecteur();
   ros::init(argc, argv, "record_position");
   ros::NodeHandle n;
+  feedback = n.advertise<std_msgs::String>("feedback",1);
   pub = n.advertise<brics_actuator::JointPositions>("out", 1);
   sub = n.subscribe<brics_actuator::JointPositions>("in",1,boost::bind(callback,boost::ref(ref_points),_1));
   ros::Rate r(10);
   sleep(1);
-  while (ros::ok())
-    { ros::spinOnce();
-      r.sleep();
-    }
+  while (ros::ok()) { 
+    ros::spinOnce();
+    r.sleep();
+  }
   return 0;
 }

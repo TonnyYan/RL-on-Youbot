@@ -21,10 +21,12 @@
 #include <iostream>
 #include <tf/transform_broadcaster.h>
 #include <pcl/common/centroid.h>
+#include <pcl/kdtree/kdtree_flann.h>
 
-#define DISTANCE_THRESH .05
+#define DISTANCE_THRESH .08
 #define CLOUD_PERCENTAGE .3
 
+//TODO Résoudre problème time stamp
 
 void callback(ros::Publisher& pub, const sensor_msgs::PointCloud2ConstPtr& input) {
 
@@ -57,7 +59,7 @@ seg.setInputCloud (cloud_filtered);//Pb: pcl_cloud doit etre un pointeur !
 //Segmentation
 seg.segment (*inliers, *coefficients);
 
-std::cout << "Model coefficients: " << coefficients->values[0] << " " 
+std::cout << "Coefficients du plan: " << coefficients->values[0] << " " 
 << coefficients->values[1] << " "
 << coefficients->values[2] << " " 
 << coefficients->values[3] << std::endl;
@@ -75,7 +77,7 @@ seg.setInputCloud (cloud_filtered);
 seg.segment (*inliers, *coefficients);
 if (inliers->indices.size () == 0)
   {
-std::cerr << "Could not estimate a planar model for the given dataset." << std::endl;
+std::cout << "Could not estimate a planar model for the given dataset." << std::endl;
 break;
 }
       
@@ -96,34 +98,44 @@ i++;
 // Object to store the centroid coordinates.
 Eigen::Vector4f centroid;
 pcl::compute3DCentroid(*cloud_filtered, centroid);
-std::cout << "The XYZ coordinates of the centroid are: ("
+std::cout << "Coordonnees du centroid: ("
 			  << centroid[0] << ", "
 			  << centroid[1] << ", "
 			  << centroid[2] << ")." << std::endl;
 
-std::cout << "Publie" << std::endl;
+//Find the closest point 
+
+pcl::KdTree<pcl::PointXYZ>::Ptr tree_ (new pcl::KdTreeFLANN<pcl::PointXYZ>);
+tree_->setInputCloud(cloud_filtered);
+
+std::vector<int> nn_indices (1);
+std::vector<float> nn_dists (1);
+
+tree_->nearestKSearch(pcl::PointXYZ(0, 0, 0), 1, nn_indices, nn_dists);
+
+printf("The closest point of (0, 0, 0) is: (%f, %f, %f)", cloud_filtered->points[nn_indices[0]].x, cloud_filtered->points[nn_indices[0]].y, cloud_filtered->points[nn_indices[0]].z);
+
+
 // We publish the result.
 pcl::PCLPointCloud2 points_out;
-std::cout<<cloud_filtered->width <<std::endl;
 pcl::toPCLPointCloud2(*cloud_filtered,points_out);
 sensor_msgs::PointCloud2 output;
 pcl_conversions::fromPCL(points_out,output);
 
-
-
  tf::TransformBroadcaster broadcaster;
+
  broadcaster.sendTransform(tf::StampedTransform(tf::Transform(
-							      tf::Quaternion( 0, 0, 0.7071, 0.7071),
-							      tf::Vector3(0.0, 0.0, 0.0)),
-						ros::Time::now(),
+							      tf::Quaternion(0.5,-0.5,0.5,-0.5),
+							      tf::Vector3(0.0,0.0,0.0)),
+					     ros::Time::now(),
 						"/camera_link",
 						"/base_kinect"));
 //On publie la tf de base_kinect par rapport à camera_link
 
-output.header.stamp = ros::Time::now();
-output.header.frame_id = "/base_kinect";
-pub.publish(output);
 
+output.header.frame_id = "/base_kinect";
+output.header.stamp = ros::Time::now();
+pub.publish(output);
 }
 
 int main(int argc, char **argv) {

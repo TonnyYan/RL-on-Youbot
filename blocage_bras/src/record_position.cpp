@@ -17,40 +17,16 @@
 #include <functional>
 #include <cmath>
 
-#define MIN_DIST_THRESHOLD .1
+#include "joints.hpp"
+
 
 ros::Subscriber sub;
 
 std::string adresseTexte ="/usr/users/promo2017/germain_hug/catkin_ws/src/blocage_bras/donnees_points.txt";
 
-typedef std::array<double, 4> Joints;
-typedef std::vector<Joints>   JointsSet;
+#define MIN_DIST_THRESHOLD .1
 
-//Redéfinition de l'opérateur "<<"
-std::ostream& operator<<(std::ostream& os, const Joints& coord_recues) {
-  os << coord_recues[0] << ' ' << coord_recues[1] << ' ' <<  coord_recues[2] << ' ' << coord_recues[3];
-  return os;
-}
 
-std::istream& operator>>(std::istream& is, Joints& coord_recues) {
-  is >> coord_recues[0] >> coord_recues[1] >> coord_recues[2] >> coord_recues[3];
-  return is;
-}
-
-inline double sqr(double x) {return  x*x;}
-
-double distance2(const Joints& coord1, const Joints coord2) {
-  return sqr(coord1[0]-coord2[0])+sqr(coord1[1]-coord2[1])+sqr(coord1[2]-coord2[2])+sqr(coord1[3]-coord2[3]);
-}
-
-double string_to_double( const std::string& s )
-{
-  std::istringstream i(s);
-  double x;
-  if (!(i >> x))
-    return 0;
-  return x;
-}
 
 void callback(JointsSet& collection, const brics_actuator::JointPositionsConstPtr& msg) {//Des nouvelles coordonnées ont été publiées
   Joints coord_recues = {
@@ -65,15 +41,16 @@ void callback(JointsSet& collection, const brics_actuator::JointPositionsConstPt
 				   boost::bind(distance2,std::ref(coord_recues),_1));
   
   // Si Ok on l'enregistre
-  if(distance2(coord_recues,*min_iter) > MIN_DIST_THRESHOLD) {
+  if(distance2(coord_recues,*min_iter) > MIN_DIST_THRESHOLD*MIN_DIST_THRESHOLD) {
       std::ofstream fichier; 
       fichier.exceptions(std::ios::failbit | std::ios::badbit);
       try {
-	fichier.open(adresseTexte.c_str());
+	fichier.open(adresseTexte.c_str(), std::ios_base::app);
 	fichier << coord_recues << std::endl;
 	fichier.close();
 	collection.push_back(coord_recues);
 	ROS_INFO_STREAM("Coordonnee enregistree");
+	std::cout << coord_recues<<std::endl;
       }
       catch (const std::exception& e) {
 	ROS_INFO_STREAM("ERREUR Ouverture Fichier");
@@ -117,7 +94,7 @@ JointsSet creationVecteur() {
   std::ifstream fichier;
   fichier.exceptions(std::ios::failbit | std::ios::badbit | std::ios::eofbit);  
   try {
-    fichier.open(adresseTexte.c_str());  
+    fichier.open(adresseTexte.c_str(), std::ios_base::app);  
     try {
       while(true) {
 	Joints joints;

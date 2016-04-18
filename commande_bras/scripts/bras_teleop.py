@@ -75,6 +75,8 @@ def main(stdscr, persist):
         pub.publish(jp)
         rate.sleep()
 
+
+
 # Starts curses (terminal handling) and run our main function.
 if __name__ == '__main__':
     persist = '--persist' in rospy.myargv(argv=sys.argv)
