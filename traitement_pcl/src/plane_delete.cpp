@@ -1,6 +1,7 @@
 //Programme qui traite le nuage de points fourni par la Kinect
 //pour supprimer les plans principaux
 #include "ros/ros.h"
+#include "geometry_msgs/Point.h"
 #include "boost/units/systems/si.hpp"
 #include "boost/units/io.hpp"
 #include <pcl_ros/point_cloud.h>
@@ -25,6 +26,9 @@
 
 #define DISTANCE_THRESH .08
 #define CLOUD_PERCENTAGE .3
+
+ros::Publisher xyz_pub;
+
 
 //TODO Résoudre problème time stamp
 
@@ -59,10 +63,6 @@ seg.setInputCloud (cloud_filtered);//Pb: pcl_cloud doit etre un pointeur !
 //Segmentation
 seg.segment (*inliers, *coefficients);
 
-std::cout << "Coefficients du plan: " << coefficients->values[0] << " " 
-<< coefficients->values[1] << " "
-<< coefficients->values[2] << " " 
-<< coefficients->values[3] << std::endl;
 
 //On ne va garder qu'un extrait
 pcl::ExtractIndices<pcl::PointXYZ> extract;
@@ -95,14 +95,6 @@ i++;
 }
 
 
-// Object to store the centroid coordinates.
-Eigen::Vector4f centroid;
-pcl::compute3DCentroid(*cloud_filtered, centroid);
-std::cout << "Coordonnees du centroid: ("
-			  << centroid[0] << ", "
-			  << centroid[1] << ", "
-			  << centroid[2] << ")." << std::endl;
-
 //Find the closest point 
 
 pcl::KdTree<pcl::PointXYZ>::Ptr tree_ (new pcl::KdTreeFLANN<pcl::PointXYZ>);
@@ -113,10 +105,14 @@ std::vector<float> nn_dists (1);
 
 tree_->nearestKSearch(pcl::PointXYZ(0, 0, 0), 1, nn_indices, nn_dists);
 
-printf("The closest point of (0, 0, 0) is: (%f, %f, %f)", cloud_filtered->points[nn_indices[0]].x, cloud_filtered->points[nn_indices[0]].y, cloud_filtered->points[nn_indices[0]].z);
+//We publish the closest point coordinates
+geometry_msgs::Point msg;
+ msg.x = cloud_filtered->points[nn_indices[0]].x;
+ msg.y = cloud_filtered->points[nn_indices[0]].y;
+ msg.z = cloud_filtered->points[nn_indices[0]].z;
+xyz_pub.publish(msg);
 
-
-// We publish the result.
+// We publish the filtered cloud.
 pcl::PCLPointCloud2 points_out;
 pcl::toPCLPointCloud2(*cloud_filtered,points_out);
 sensor_msgs::PointCloud2 output;
@@ -127,14 +123,14 @@ pcl_conversions::fromPCL(points_out,output);
  broadcaster.sendTransform(tf::StampedTransform(tf::Transform(
 							      tf::Quaternion(0.5,-0.5,0.5,-0.5),
 							      tf::Vector3(0.0,0.0,0.0)),
-					     ros::Time::now(),
+						ros::Time(0),
 						"/camera_link",
 						"/base_kinect"));
 //On publie la tf de base_kinect par rapport à camera_link
 
 
 output.header.frame_id = "/base_kinect";
-output.header.stamp = ros::Time::now();
+output.header.stamp =ros::Time(0) ;
 pub.publish(output);
 }
 
@@ -142,6 +138,7 @@ int main(int argc, char **argv) {
 ros::init(argc, argv, "plane_delete");
 ros::NodeHandle n;
 ros::Publisher  pub = n.advertise<sensor_msgs::PointCloud2>("pcl_out", 0);
+xyz_pub = n.advertise<geometry_msgs::Point>("r_min", 1);
 ros::Subscriber sub =n.subscribe<sensor_msgs::PointCloud2>("pcl_in", 1, boost::bind(callback, boost::ref(pub), _1));
 ros::Rate r(10);
 sleep(1);

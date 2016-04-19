@@ -216,7 +216,6 @@ int main(int argc, char **argv) {
   ros::NodeHandle n;
   pub = n.advertise<brics_actuator::JointPositions>("out/positions", 1);
   movebase = n.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-  rmin_sub = n.subscribe<std_msgs::String>("r_min", 1, callback);
   sleep(1);
   while (ros::ok())
     { 
