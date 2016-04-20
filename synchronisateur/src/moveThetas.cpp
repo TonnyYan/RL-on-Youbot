@@ -48,6 +48,7 @@ bool on_request(synchronisateur::moveThetas::Request &req,
   while(isMoving){
     ros::spinOnce();
   }
+
   return true;
 }
 

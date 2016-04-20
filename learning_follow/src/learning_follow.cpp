@@ -36,7 +36,7 @@ ros::ServiceClient client_moveThetas;
 typedef std::array<double, 3> Rayon; //vecteur à 3 dim r
 typedef std::array<double, 5> Thetas;//vecteur à 5 dim Theta (seul les 4 premiers sont utilisés)
 
-/*
+
 class Etat{
   Rayon r;
   Thetas theta;
@@ -44,16 +44,15 @@ class Etat{
 
 public :
 
-  Etat(Rayon ,Thetas ,Thetas);
+  Etat(const Rayon& r, const Thetas& theta, const Thetas& dthetamin)
+  : r(r), theta(theta), dthetamin(dthetamin)  {
+  }
   Etat()                       = default;
   Etat(const Etat&)            = default;
   Etat& operator=(const Etat&) = default;
 };
 
-Etat::Etat (const Rayon& r, const Thetas& theta, const Thetas& dthetamin) 
-  : r(r), theta(theta), dthetamin(dthetamin)  {
-}
-*/
+typedef std::vector<Etat> BaseEtats;
 
 Thetas  operator+(Thetas& theta1,Thetas& theta2) {
   Thetas out;
@@ -112,19 +111,17 @@ void  moveBaseRandom(){
 
 //fonction qui bouge le bras d'un angle dtheats (a 4D) en publiant sur le topic /out qui est relié au topic /in de validation_position.cpp    
 
-void move(Thetas& theta){
+void moveArm(const Thetas& theta){
   //on cree un msg de type brics_actuator::JointPositions   ???? ou brics_actuator::JointPositionsConstPtr
   synchronisateur::moveThetas srv;
   srv.request.theta1 = theta[0];
   srv.request.theta2 = theta[1];
   srv.request.theta3 = theta[2];
   srv.request.theta4 = theta[3];
-  ROS_INFO("Appel mouvement");
   if (client_moveThetas.call(srv)){
-    ROS_INFO("Mouvement Effectue");
   }
   else {
-    ROS_ERROR("Failed to call moveTheta");
+    std::cout<<"Move Fail"<<std::endl;
   }
 }
 
@@ -136,13 +133,23 @@ Rayon vecteur_kinnect_objet(){
     r_courant = {srv.response.x,srv.response.y,srv.response.z};
   }
   else{
-    ROS_ERROR("Failed to call service getR");
+    std::cout<<"getR Fail"<<std::endl;
   }
   return r_courant;
 
 }
 
-
+Thetas creationEpsilonAleatoire(){
+  Thetas epsilonrandom;
+ epsilonrandom[0]=(rand()% 21 -10.0)/100;
+  epsilonrandom[1]=(rand()% 21 -10.0)/100;
+  epsilonrandom[2]=(rand()% 21 -10.0)/100;
+ epsilonrandom[3]=(rand()% 21 -10.0)/100;
+ epsilonrandom[4]=0.111;
+ std::cout<<"Thetas :"<<epsilonrandom<<std::endl;
+ros::Duration(0.5).sleep();
+  return epsilonrandom;
+}
 
 
 //fonction qui prend en argument une situation donnée (theta, r, dthemamin,rmin) et un entier n fixé  qui effectue des mouvement dtheta aleatoire autours de dthethamin initial pour essayer de trouver un nouveau mouvement dtheta plus interressant (i.e. tq r'<rmin)
@@ -152,13 +159,14 @@ Thetas  mvtAleatoire(Rayon r,Thetas& theta, Rayon rmin,Thetas& dthetamin){
   Thetas dthetaprim;
   Rayon newrmin =  rmin;
   Thetas newdthetamin = dthetamin;
-  Thetas epsilon= {0,0,0,0,0};
+  Thetas epsilon; 
   for(int i =0;i< NB_TESTS_ALEATOIRES;i++){
     //modification de dtheta
     std::cout<<"Amelioration n°"<<i<<std::endl;
+epsilon = creationEpsilonAleatoire();
     dthetaprim = dthetamin+epsilon;
     //on bouge de dthetaprim
-    move(dthetaprim+theta);
+    moveArm(dthetaprim+theta);
     //on regarde la nouvelle valeur de r
     rprim  = vecteur_kinnect_objet();
     //si rprim < rmin alors mise a jour de dthetamin et rmin
@@ -172,6 +180,7 @@ Thetas  mvtAleatoire(Rayon r,Thetas& theta, Rayon rmin,Thetas& dthetamin){
 
 //fonction qui prend un (theta,r) random et essaie d'ameliorer le dtheta, i.e. f(theta,r)
 void apprentissageAleatoire(){
+  BaseEtats baseEtats;
   Thetas thetarandom;
   Thetas dtheta;
   Thetas dthetamin;
@@ -182,21 +191,21 @@ void apprentissageAleatoire(){
     std::cout<<"Nouvel essai random n°"<<j<<std::endl;
     //on prend un (theta,r) random et on bouge le bras vers ce theta
     thetarandom = creationThetaRandom();
-    move(thetarandom);
+    moveArm(thetarandom);
     //   moveBaseRandom(); //-> Utiliser service
     r = vecteur_kinnect_objet();
     //on bouge le bras de dtheta que le programme a prévu i.e. f(thetarandom,r) et on regarde rmin qui est atteint avec le programme
     // dtheta = 0; //f=0
-    dtheta = {0,0,0,0,0};
-    move(thetarandom+dtheta);
+    dtheta = {.0,.0,.0,.0,0};
+    moveArm(thetarandom+dtheta);
     rmin = vecteur_kinnect_objet();
 
     std::cout<<"Thetas :"<<thetarandom<<" | Rayon :"<<r<< " | Distance :"<<norme(r)<<"  | dthetas :"<<dtheta<<std::endl;
     //on bouge n fois autours de dtheta pour trouver un meilleur rmin et le dtheta qui lui est associé
     dthetamin = mvtAleatoire(r,thetarandom,rmin,dtheta);
     //creation d'un nouvel etat et ajout a la base de données
-    //  Etat etat (r,thetarandom,dthetamin);
-    //pb ici!    BaseEtats baseEtats.pushback(etat);
+    Etat etat (r,thetarandom,dthetamin);
+    baseEtats.push_back(etat);
     std::cout<<"Amelioration dthetas :  "<<dtheta<<std::endl;
   }
   //histoire du gaml avec mise a jour de f=learn(baseEtats)
