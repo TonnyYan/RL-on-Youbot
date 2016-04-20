@@ -14,6 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
 add_service_files(
   FILES
   getR.srv
+  getThetas.srv
+  moveThetas.srv
 )
 
 generate_messages(
@@ -34,4 +36,24 @@ include_directories(
 
  add_executable(getR src/getR.cpp)
  target_compile_options(getR PUBLIC -std=c++11)
-add_dependencies(getR getR_generate_messages_cpp)
+ add_dependencies(getR getR_generate_messages_cpp)
+ 
+ add_executable(getThetas src/getThetas.cpp)
+ target_compile_options(getThetas PUBLIC -std=c++11)
+ add_dependencies(getThetas getThetas_generate_messages_cpp)
+
+ add_executable(moveThetas src/moveThetas.cpp)
+ target_compile_options(moveThetas PUBLIC -std=c++11)
+ add_dependencies(moveThetas moveThetas_generate_messages_cpp)
+
+target_link_libraries(getR
+   ${catkin_LIBRARIES}
+)
+
+target_link_libraries(getThetas
+   ${catkin_LIBRARIES}
+)
+
+target_link_libraries(moveThetas
+   ${catkin_LIBRARIES}
+)

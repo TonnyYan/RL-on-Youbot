@@ -13,6 +13,10 @@
 #include <array>
 #include <functional>
 #include <cmath>
+#include "std_msgs/String.h"
+#include "synchronisateur/getThetas.h"
+#include "synchronisateur/getR.h"
+
 
 //TODO : 
 //Résoudre pb Etat constructeur
@@ -23,6 +27,8 @@ ros::Publisher pub;
 ros::Publisher movebase;
 ros::Subscriber sub;
 ros::Subscriber rmin_sub;
+ros::ServiceClient client_rmin;
+ros::ServiceClient client_thetas;
 ros::Rate r(10);
 
 #define NB_TESTS_ALEATOIRES 10
@@ -30,8 +36,6 @@ ros::Rate r(10);
 
 typedef std::array<double, 3> Rayon; //vecteur à 3 dim r
 typedef std::array<double, 5> Thetas;//vecteur à 5 dim Theta (seul les 4 premiers sont utilisés)
-
-Rayon r_courant;
 
 class Etat{
   Rayon r;
@@ -138,11 +142,17 @@ void move(Thetas& theta){
 }
 
 //fonction qui renvoie un rayon r qui est le vecteur base_kinnect->objet
-//elle lit sur un topic (partie Hugo)
 Rayon vecteur_kinnect_objet(){
-  //on récupère le point le plus proche avec pcl
-  //-> Utiliser service
-
+  synchronisateur::getR srv;
+  Rayon r_courant;
+  if (client_rmin.call(srv))
+  {
+    r_courant = {srv.response.x,srv.response.y,srv.response.z};
+  }
+  else
+  {
+    ROS_ERROR("Failed to call service getR");
+  }
   return r_courant;
 
 }
@@ -214,10 +224,15 @@ void apprentissageAleatoire(){
 int main(int argc, char **argv) {
   ros::init(argc, argv, "learning_follow");
   ros::NodeHandle n;
+
   pub = n.advertise<brics_actuator::JointPositions>("out/positions", 1);
   movebase = n.advertise<geometry_msgs::Twist>("cmd_vel", 1);
   rmin_sub = n.subscribe<std_msgs::String>("r_min", 1, callback);
+  client_rmin = n.serviceClient<synchronisateur::getR>("getR");
+  client_thetas = n.serviceClient<synchronisateur::getThetas>("getThetas");
+
   sleep(1);
+
   while (ros::ok())
     { 
       
