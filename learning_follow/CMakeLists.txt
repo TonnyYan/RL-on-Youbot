@@ -133,6 +133,11 @@ target_compile_options(learning_follow PUBLIC -std=c++11)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(learning_follow learning_follow_generate_messages_cpp)
+add_dependencies(getR getR_generate_messages_cpp)
+add_dependencies(getThetas getThetas_generate_messages_cpp)
+add_dependencies(moveThetas moveThetas_generate_messages_cpp)
+
+
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(learning_follow

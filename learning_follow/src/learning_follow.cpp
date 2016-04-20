@@ -16,20 +16,19 @@
 #include "std_msgs/String.h"
 #include "synchronisateur/getThetas.h"
 #include "synchronisateur/getR.h"
-
+#include "synchronisateur/moveThetas.h"
 
 //TODO : 
 //Résoudre pb Etat constructeur
 //Remplir le main
 //Créer un serveur qui gère les requetes
 
-ros::Publisher pub;
 ros::Publisher movebase;
 ros::Subscriber sub;
-ros::Subscriber rmin_sub;
 ros::ServiceClient client_rmin;
-ros::ServiceClient client_thetas;
-ros::Rate r(10);
+ros::ServiceClient client_getThetas;
+ros::ServiceClient client_moveThetas;
+
 
 #define NB_TESTS_ALEATOIRES 10
 #define NB_TESTS_PAR_PHASE 10
@@ -37,6 +36,7 @@ ros::Rate r(10);
 typedef std::array<double, 3> Rayon; //vecteur à 3 dim r
 typedef std::array<double, 5> Thetas;//vecteur à 5 dim Theta (seul les 4 premiers sont utilisés)
 
+/*
 class Etat{
   Rayon r;
   Thetas theta;
@@ -44,33 +44,26 @@ class Etat{
 
 public :
 
-  Etat(Rayon ,Thetas ,Thetas); //constructeur mais pas sur que ca marche
+  Etat(Rayon ,Thetas ,Thetas);
   Etat()                       = default;
   Etat(const Etat&)            = default;
   Etat& operator=(const Etat&) = default;
 };
 
-
-
 Etat::Etat (const Rayon& r, const Thetas& theta, const Thetas& dthetamin) 
   : r(r), theta(theta), dthetamin(dthetamin)  {
 }
+*/
 
- 
-
-
- Thetas  operator+(Thetas& theta1,Thetas& theta2) {
+Thetas  operator+(Thetas& theta1,Thetas& theta2) {
   Thetas out;
   out[0]=theta1[0]+theta2[0];
   out[1]=theta1[1]+theta2[1];
   out[2]=theta1[2]+theta2[2];
   out[3]=theta1[3]+theta2[3];
   out[4]=theta1[4]+theta2[4];
-
   return out;
 }
-
-
 
 std::ostream& operator<<(std::ostream& os, const Thetas& theta) {
   os << theta[0] << ' ' << theta[1] << ' ' <<  theta[2] << ' ' << theta[3]<< ' ' << theta[4];
@@ -81,8 +74,6 @@ std::ostream& operator<<(std::ostream& os, const Rayon& r) {
   return os;
 }
 
-
-
 inline double sqr(double x) {return  x*x;}
 
 double norme(Rayon r) {
@@ -90,19 +81,16 @@ double norme(Rayon r) {
   return norme;
 }
 
-void callback(std_msgs::String msg){
-  
-}
 
 Thetas creationThetaRandom(){
   Thetas thetarandom;
   //rand() returns a pseudo-random integral number in the range between 0 and RAND_MAX.
   //les valeurs des angles sont ramenes a des entiers entre 0 et ? pour avoir une precision de 0.01
   //par exemple joint 1 :  between 0.0100692 and 5.84014 ---> entre 1 et 584 -->(rand()% 584 +1)/100
-  thetarandom[0]=(rand()% 584 +1)/100;
-  thetarandom[1]=(rand()% 261 +1)/100 ;
-  thetarandom[2]=(rand()% 501 +2)/100*(-1);
-  thetarandom[3]=(rand()% 340 +3)/100;
+  thetarandom[0]=(rand()% 584 +1.0)/1000;
+  thetarandom[1]=(rand()% 261 +1.0)/1000 ;
+  thetarandom[2]=(rand()% 501 +2.0)/1000*(-1);
+  thetarandom[3]=(rand()% 340 +3.0)/1000;
   thetarandom[4]=0.111;
 
   return thetarandom;
@@ -126,31 +114,28 @@ void  moveBaseRandom(){
 
 void move(Thetas& theta){
   //on cree un msg de type brics_actuator::JointPositions   ???? ou brics_actuator::JointPositionsConstPtr
-  brics_actuator::JointPositions msg; 
-  for (int i = 0; i < 5; i++) {
-    brics_actuator::JointValue joint;
-    joint.timeStamp = ros::Time::now();
-    joint.value = theta[i];
-    joint.unit = boost::units::to_string(boost::units::si::radian);
-    std::stringstream jointName;
-    jointName << "arm_joint_" << (i + 1);
-    joint.joint_uri = jointName.str();
-    //On empile le message value dans le message de positions
-    msg.positions.push_back(joint);
+  synchronisateur::moveThetas srv;
+  srv.request.theta1 = theta[0];
+  srv.request.theta2 = theta[1];
+  srv.request.theta3 = theta[2];
+  srv.request.theta4 = theta[3];
+  ROS_INFO("Appel mouvement");
+  if (client_moveThetas.call(srv)){
+    ROS_INFO("Mouvement Effectue");
   }
-  pub.publish(msg);
+  else {
+    ROS_ERROR("Failed to call moveTheta");
+  }
 }
 
 //fonction qui renvoie un rayon r qui est le vecteur base_kinnect->objet
 Rayon vecteur_kinnect_objet(){
   synchronisateur::getR srv;
   Rayon r_courant;
-  if (client_rmin.call(srv))
-  {
+  if (client_rmin.call(srv)) {
     r_courant = {srv.response.x,srv.response.y,srv.response.z};
   }
-  else
-  {
+  else{
     ROS_ERROR("Failed to call service getR");
   }
   return r_courant;
@@ -165,13 +150,12 @@ Rayon vecteur_kinnect_objet(){
 Thetas  mvtAleatoire(Rayon r,Thetas& theta, Rayon rmin,Thetas& dthetamin){
   Rayon rprim;
   Thetas dthetaprim;
-  /*Rayon newrmin= rmin;
-    Thetas newdthetamin= dthetamin;*/
   Rayon newrmin =  rmin;
   Thetas newdthetamin = dthetamin;
   Thetas epsilon= {0,0,0,0,0};
   for(int i =0;i< NB_TESTS_ALEATOIRES;i++){
     //modification de dtheta
+    std::cout<<"Amelioration n°"<<i<<std::endl;
     dthetaprim = dthetamin+epsilon;
     //on bouge de dthetaprim
     move(dthetaprim+theta);
@@ -198,9 +182,8 @@ void apprentissageAleatoire(){
     std::cout<<"Nouvel essai random n°"<<j<<std::endl;
     //on prend un (theta,r) random et on bouge le bras vers ce theta
     thetarandom = creationThetaRandom();
-    move(thetarandom); //-> Utiliser service
-    moveBaseRandom(); //-> Utiliser service
-
+    move(thetarandom);
+    //   moveBaseRandom(); //-> Utiliser service
     r = vecteur_kinnect_objet();
     //on bouge le bras de dtheta que le programme a prévu i.e. f(thetarandom,r) et on regarde rmin qui est atteint avec le programme
     // dtheta = 0; //f=0
@@ -208,11 +191,11 @@ void apprentissageAleatoire(){
     move(thetarandom+dtheta);
     rmin = vecteur_kinnect_objet();
 
-    std::cout<<"Thetas :"<<thetarandom<<" | Rayon :"<<r<< " | Distance :"<<norme(r)<<"dthetas :"<<dtheta<<std::endl;
+    std::cout<<"Thetas :"<<thetarandom<<" | Rayon :"<<r<< " | Distance :"<<norme(r)<<"  | dthetas :"<<dtheta<<std::endl;
     //on bouge n fois autours de dtheta pour trouver un meilleur rmin et le dtheta qui lui est associé
     dthetamin = mvtAleatoire(r,thetarandom,rmin,dtheta);
     //creation d'un nouvel etat et ajout a la base de données
-     Etat etat (r,thetarandom,dthetamin);
+    //  Etat etat (r,thetarandom,dthetamin);
     //pb ici!    BaseEtats baseEtats.pushback(etat);
     std::cout<<"Amelioration dthetas :  "<<dtheta<<std::endl;
   }
@@ -224,18 +207,16 @@ void apprentissageAleatoire(){
 int main(int argc, char **argv) {
   ros::init(argc, argv, "learning_follow");
   ros::NodeHandle n;
-
-  pub = n.advertise<brics_actuator::JointPositions>("out/positions", 1);
   movebase = n.advertise<geometry_msgs::Twist>("cmd_vel", 1);
-  rmin_sub = n.subscribe<std_msgs::String>("r_min", 1, callback);
   client_rmin = n.serviceClient<synchronisateur::getR>("getR");
-  client_thetas = n.serviceClient<synchronisateur::getThetas>("getThetas");
+  client_getThetas = n.serviceClient<synchronisateur::getThetas>("getThetas");
+  client_moveThetas = n.serviceClient<synchronisateur::moveThetas>("moveThetas");
 
   sleep(1);
 
   while (ros::ok())
     { 
-      
+      apprentissageAleatoire();
     }
   return 0;
 }
