@@ -17,6 +17,7 @@
 #include "synchronisateur/getThetas.h"
 #include "synchronisateur/getR.h"
 #include "synchronisateur/moveThetas.h"
+#include <math.h>  
 
 //TODO : 
 //Résoudre pb Etat constructeur
@@ -32,6 +33,10 @@ ros::ServiceClient client_moveThetas;
 
 #define NB_TESTS_ALEATOIRES 10
 #define NB_TESTS_PAR_PHASE 10
+#define R_min 0.5   //rayon min pour mouvement de base aleatoire
+#define R_max 1.5   //rayon max  pour mouvement de base aleatoire
+#define AngleTest 30  //angle qui definit la zone de test en degrés
+
 
 typedef std::array<double, 3> Rayon; //vecteur à 3 dim r
 typedef std::array<double, 5> Thetas;//vecteur à 5 dim Theta (seul les 4 premiers sont utilisés)
@@ -97,7 +102,17 @@ Thetas creationThetaRandom(){
 
 //fonction qui bouge la base random en publiant sur le topic /out/base
 void  moveBaseRandom(){
+//on a un couple (r,theta) au hasard dans [rmin,rmax]*[0,angletest]
+  double r =  ((double) rand() / (RAND_MAX))*(R_max-R_min)+R_min;
+  double angle =  ((double) rand() / (RAND_MAX))*Angletest;
+
+  // On transpose dans le repere (x,y)
+  double x=r*cos(angle);
+  double y = r*sin(angle);
+
+
   geometry_msgs::Twist twist;
+
   twist.linear.x = rand()/5-0.1;
   twist.linear.y = rand()/5-0.1;
   movebase.publish(twist);
