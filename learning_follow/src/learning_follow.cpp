@@ -16,8 +16,7 @@
 #include "std_msgs/String.h"
 #include "synchronisateur/getThetas.h"
 #include "synchronisateur/getR.h"
-#include "synchronisateur/moveThetas.h"
-#include <math.h>  
+#include "synchronisateur/moveThetas.h" 
 
 //TODO : 
 //Résoudre pb Etat constructeur
@@ -110,7 +109,7 @@ void  moveBaseRandom(){
   double x=r*cos(angle);
   double y = r*sin(angle);
 
-
+  //on envoie le message au package move_base
   geometry_msgs::Twist twist;
 
   twist.linear.x = rand()/5-0.1;
