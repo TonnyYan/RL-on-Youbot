@@ -1,3 +1,4 @@
+#include <gaml-libsvm.hpp>
 #include "ros/ros.h"
 #include "boost/units/systems/si.hpp"
 #include "boost/units/io.hpp"
@@ -29,7 +30,8 @@ ros::Subscriber sub;
 ros::ServiceClient client_rmin;
 ros::ServiceClient client_getThetas;
 ros::ServiceClient client_moveThetas;
-
+bool isBegin;
+void calcul_f(BaseEtats baseEtats){}
 
 #define NB_TESTS_ALEATOIRES 10
 #define NB_TESTS_PAR_PHASE 10
@@ -80,13 +82,13 @@ Thetas creationThetaRandom(){
 
 //fonction qui bouge la base random en publiant sur le topic /out/base
 void  moveBaseRandom(){
-//on a un couple (r,theta) au hasard dans [rmin,rmax]*[0,angletest]
-  double r =  ((double) rand() / (RAND_MAX))*(R_max-R_min)+R_min;
-  double angle =  ((double) rand() / (RAND_MAX))*1;
+  //on a un couple (r,theta) au hasard dans [rmin,rmax]*[0,angletest]
+  // double r =  ((double) rand() / (RAND_MAX))*(R_max-R_min)+R_min;
+  //double angle =  ((double) rand() / (RAND_MAX))*1;
 
   // On transpose dans le repere (x,y)
-  double x=r*cos(angle);
-  double y = r*sin(angle);
+  // double x=r*cos(angle);
+  //double y = r*sin(angle);
 
   //on envoie le message au package move_base
   geometry_msgs::Twist twist;
@@ -134,13 +136,13 @@ Rayon vecteur_kinnect_objet(){
 
 Thetas creationEpsilonAleatoire(){
   Thetas epsilonrandom;
- epsilonrandom[0]=(rand()% 21 -10.0)/100;
+  epsilonrandom[0]=(rand()% 21 -10.0)/100;
   epsilonrandom[1]=(rand()% 21 -10.0)/100;
   epsilonrandom[2]=(rand()% 21 -10.0)/100;
- epsilonrandom[3]=(rand()% 21 -10.0)/100;
- epsilonrandom[4]=0.111;
- std::cout<<"Thetas :"<<epsilonrandom<<std::endl;
-ros::Duration(0.5).sleep();
+  epsilonrandom[3]=(rand()% 21 -10.0)/100;
+  epsilonrandom[4]=0.111;
+  std::cout<<"Thetas :"<<epsilonrandom<<std::endl;
+  ros::Duration(0.5).sleep();
   return epsilonrandom;
 }
 
@@ -156,7 +158,7 @@ Thetas  mvtAleatoire(Rayon r,Thetas& theta, Rayon rmin,Thetas& dthetamin){
   for(int i =0;i< NB_TESTS_ALEATOIRES;i++){
     //modification de dtheta
     std::cout<<"Amelioration n°"<<i<<std::endl;
-epsilon = creationEpsilonAleatoire();
+    epsilon = creationEpsilonAleatoire();
     dthetaprim = dthetamin+epsilon;
     //on bouge de dthetaprim
     moveArm(dthetaprim+theta);
@@ -179,7 +181,17 @@ void apprentissageAleatoire(){
   Thetas dthetamin;
   Rayon rmin;
   Rayon r;
+  Entree ent;
+ 
+  std::list<gaml::libsvm::Predictor<Entree,double>> predictors;
+  std::array<std::string,5> filenames = {{std::string("theta1.pred"),"theta2.pred","theta3.pred","theta4.pred","theta5.pred"}};
+  auto name_iter = filenames.begin();
+
+
+
   std::cout<<"Nouvelle boucle mise a jour de f"<<std::endl;
+
+
   for (int j=0;j< NB_TESTS_PAR_PHASE;j++){
     std::cout<<"Nouvel essai random n°"<<j<<std::endl;
     //on prend un (theta,r) random et on bouge le bras vers ce theta
@@ -188,8 +200,27 @@ void apprentissageAleatoire(){
     //   moveBaseRandom(); //-> Utiliser service
     r = vecteur_kinnect_objet();
     //on bouge le bras de dtheta que le programme a prévu i.e. f(thetarandom,r) et on regarde rmin qui est atteint avec le programme
-    // dtheta = 0; //f=0
-    dtheta = {.0,.0,.0,.0,0};
+    
+    if(isBegin){
+      dtheta = {.0,.0,.0,.0,0};
+    }else{
+
+      //chargement de f(entree) qui calcule la dtheta associé avec f
+      gaml::multidim::Predictor<dThetas,
+                              gaml::libsvm::Predictor<Entree,double>,
+                              5> g(output_of_array, predictors.begin(), predictors.end());
+
+      ent = {r[0],r[1],r[2],thetarandom[0],thetarandom[1],thetarandom[2],thetarandom[3],thetarandom[4]};
+      dtheta = {
+	g(ent).theta1,
+	g(ent).theta2,
+	g(ent).theta3,
+	g(ent).theta4,
+	g(ent).theta5
+      };
+
+
+    }
     moveArm(thetarandom+dtheta);
     rmin = vecteur_kinnect_objet();
 
@@ -197,13 +228,30 @@ void apprentissageAleatoire(){
     //on bouge n fois autours de dtheta pour trouver un meilleur rmin et le dtheta qui lui est associé
     dthetamin = mvtAleatoire(r,thetarandom,rmin,dtheta);
     //creation d'un nouvel etat et ajout a la base de données
+
     Etat etat (r,thetarandom,dthetamin);
     baseEtats.push_back(etat);
     std::cout<<"Amelioration dthetas :  "<<dtheta<<std::endl;
+
   }
 
   //histoire du gaml avec mise a jour de f=learn(baseEtats)
   std::cout<<"mise a jour de f"<<std::endl;
+
+  //Appeler fonction de learnergaml avec baseEtats en param ?
+  calcul_f(baseEtats);
+
+  //CHARGEMENT DE f
+    // Let us load our predictor. We need first to gather each loaded
+    // scalar predictor in a collection...
+    name_iter= filenames.begin();
+    for(unsigned int dim = 0; dim < 5; ++dim) {
+      gaml::libsvm::Predictor<Entree,double> predictor(nb_nodes_of, fill_nodes);
+      predictor.load_model(*(name_iter++));
+      predictors.push_back(predictor);
+    }
+    isBegin = false;
+
 }
 
 
@@ -214,9 +262,8 @@ int main(int argc, char **argv) {
   client_rmin = n.serviceClient<synchronisateur::getR>("getR");
   client_getThetas = n.serviceClient<synchronisateur::getThetas>("getThetas");
   client_moveThetas = n.serviceClient<synchronisateur::moveThetas>("moveThetas");
-
+  isBegin = true;
   sleep(1);
-
   while (ros::ok())
     { 
       apprentissageAleatoire();
