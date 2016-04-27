@@ -130,10 +130,16 @@ include_directories(
 ## Declare a C++ executable
 add_executable(learning_follow src/learning_follow.cpp)
 target_compile_options(learning_follow PUBLIC -std=c++11)
+add_executable(learnergaml src/learnergaml.cpp)
+target_compile_options(learnergaml PUBLIC -std=c++11)
+
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(learning_follow learning_follow_generate_messages_cpp)
-
+add_dependencies(learnergaml learnergaml_generate_messages_cpp)
+add_dependencies(getR getR_generate_messages_cpp)
+add_dependencies(getThetas getThetas_generate_messages_cpp)
+add_dependencies(moveThetas moveThetas_generate_messages_cpp)
 
 
 

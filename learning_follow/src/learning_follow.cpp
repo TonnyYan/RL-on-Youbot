@@ -17,6 +17,7 @@
 #include "synchronisateur/getThetas.h"
 #include "synchronisateur/getR.h"
 #include "synchronisateur/moveThetas.h" 
+#include "Etats.hpp"
 
 //TODO : 
 //Résoudre pb Etat constructeur
@@ -35,28 +36,6 @@ ros::ServiceClient client_moveThetas;
 #define R_min 0.5   //rayon min pour mouvement de base aleatoire
 #define R_max 1.5   //rayon max  pour mouvement de base aleatoire
 #define AngleTest 30  //angle qui definit la zone de test en degrés
-
-
-typedef std::array<double, 3> Rayon; //vecteur à 3 dim r
-typedef std::array<double, 5> Thetas;//vecteur à 5 dim Theta (seul les 4 premiers sont utilisés)
-
-
-class Etat{
-  Rayon r;
-  Thetas theta;
-  Thetas dthetamin;
-
-public :
-
-  Etat(const Rayon& r, const Thetas& theta, const Thetas& dthetamin)
-  : r(r), theta(theta), dthetamin(dthetamin)  {
-  }
-  Etat()                       = default;
-  Etat(const Etat&)            = default;
-  Etat& operator=(const Etat&) = default;
-};
-
-typedef std::vector<Etat> BaseEtats;
 
 Thetas  operator+(Thetas& theta1,Thetas& theta2) {
   Thetas out;
@@ -103,7 +82,7 @@ Thetas creationThetaRandom(){
 void  moveBaseRandom(){
 //on a un couple (r,theta) au hasard dans [rmin,rmax]*[0,angletest]
   double r =  ((double) rand() / (RAND_MAX))*(R_max-R_min)+R_min;
-  double angle =  ((double) rand() / (RAND_MAX))*Angletest;
+  double angle =  ((double) rand() / (RAND_MAX))*1;
 
   // On transpose dans le repere (x,y)
   double x=r*cos(angle);
@@ -222,6 +201,7 @@ void apprentissageAleatoire(){
     baseEtats.push_back(etat);
     std::cout<<"Amelioration dthetas :  "<<dtheta<<std::endl;
   }
+
   //histoire du gaml avec mise a jour de f=learn(baseEtats)
   std::cout<<"mise a jour de f"<<std::endl;
 }
