@@ -1,6 +1,5 @@
 #pragma once
 
-
 typedef std::array<double, 3> Rayon; //vecteur à 3 dim r
 typedef std::array<double, 5> Thetas;//vecteur à 5 dim Theta (seul les 4 premiers sont utilisés)
 
@@ -18,9 +17,9 @@ public :
   Etat(const Etat&)            = default;
   Etat& operator=(const Etat&) = default;
   
-  Rayon getRayon(){ return r;}
-  Thetas getThetas(){ return theta;}
-  Thetas getdThetas(){ return dthetamin;}
+  Rayon getRayon() const { return r;}
+  Thetas getThetas() const { return theta;}
+  Thetas getdThetas() const { return dthetamin;}
 
 };
 
@@ -59,10 +58,11 @@ public:
 };
 typedef std::pair<Entree,dThetas>  Data;
 typedef std::vector<Data>         DataSet;
+typedef  gaml::multidim::Predictor<dThetas,gaml::libsvm::Predictor<Entree,double>,5> fonction;	
 
 
 // This function converts an array of 5 values to a Theta.
-dThetas output_of_array(const std::array<double,5>& values) {
+inline dThetas output_of_array(const std::array<double,5>& values) {
   dThetas res;
   res.theta1 = values[0];
   res.theta2 = values[1];
@@ -72,16 +72,16 @@ dThetas output_of_array(const std::array<double,5>& values) {
   return res;
 }
 // This function extracts the scalar values from the Point.
-std::array<double,5> array_of_output(const dThetas& output) {
+inline std::array<double,5> array_of_output(const dThetas& output) {
   return {{output.theta1,output.theta2,output.theta3,output.theta4,output.theta5}};
 }
 
 
-int nb_nodes_of(const Entree& theta) {
+inline int nb_nodes_of(const Entree& theta) {
   return 9;
 }
 
-void fill_nodes(const Entree& ent,struct svm_node* nodes) {
+inline void fill_nodes(const Entree& ent,struct svm_node* nodes) {
   
   nodes->index = 1;
   nodes->value = ent.x; 
@@ -110,5 +110,12 @@ void fill_nodes(const Entree& ent,struct svm_node* nodes) {
   nodes->index = -1;   // end
 }
 
-Entree input_of (const Data& data) {return data.first;}
-dThetas  output_of(const Data& data) {return data.second;}
+
+inline Entree input_of (const Data& data) {return data.first;}
+inline dThetas  output_of(const Data& data) {return data.second;}
+
+inline fonction calcul_f(const BaseEtats& baseEtats);
+
+
+
+

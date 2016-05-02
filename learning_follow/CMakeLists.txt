@@ -17,17 +17,13 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable            (learnergaml src/learnergaml.cpp src/learning_follow.cpp)
+add_executable            (learnergaml src/learnergaml.cpp src/learning_follow.cpp src/generationRandom.cpp)
 target_include_directories(learnergaml PUBLIC ${GAML_INCLUDE_DIRS})
 target_compile_options    (learnergaml PUBLIC ${GAML_CFLAGS_OTHER} -std=c++11)
 target_link_libraries     (learnergaml ${catkin_LIBRARIES} ${GAML_LIBRARIES})
 add_dependencies          (learnergaml learnergaml_generate_messages_cpp)
 
 
-
-
-
-# Bizarre...
 add_dependencies      (getR       getR_generate_messages_cpp)
 add_dependencies      (getThetas  getThetas_generate_messages_cpp)
 add_dependencies      (moveThetas moveThetas_generate_messages_cpp)
