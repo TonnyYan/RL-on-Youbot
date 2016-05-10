@@ -28,11 +28,11 @@ void Initialisation(){
 }
 
 
-fonction calcul_f(const BaseEtats& baseEtats){
+fonction calcul_f(const BaseEtats& baseEtats, bool record){
 
   std::list<gaml::libsvm::Predictor<Entree,double>> null_predictors;
   gaml::libsvm::Predictor<Entree,double> null_predictor(nb_nodes_of, fill_nodes);
-  for(int i = 0; i < 5; i++) null_predictors.push_back(null_predictor);
+  for(int i = 0; i < 4; i++) null_predictors.push_back(null_predictor);
   fonction f(output_of_array,null_predictors.begin(), null_predictors.end()); // Dummy init, will be ecrased by learner.
 
   try {
@@ -48,15 +48,13 @@ fonction calcul_f(const BaseEtats& baseEtats){
 	baseEtats[i].getThetas()[0],
 	baseEtats[i].getThetas()[1], 
 	baseEtats[i].getThetas()[2],
-	baseEtats[i].getThetas()[3],
-	baseEtats[i].getThetas()[4]
+	baseEtats[i].getThetas()[3]
       };
       dThetas s = {
 	baseEtats[i].getdThetas()[0],
 	baseEtats[i].getdThetas()[1], 
 	baseEtats[i].getdThetas()[2],
-	baseEtats[i].getdThetas()[3],
-	baseEtats[i].getdThetas()[4]
+	baseEtats[i].getdThetas()[3]
       };
       data = Data(e,s);
       i++;
@@ -68,18 +66,19 @@ fonction calcul_f(const BaseEtats& baseEtats){
 
     auto scalar_learner = gaml::libsvm::supervized::learner<Entree,double>(params, nb_nodes_of, fill_nodes); 
 
-    auto learner = gaml::multidim::learner<dThetas,5>(scalar_learner, array_of_output, output_of_array);
+    auto learner = gaml::multidim::learner<dThetas,4>(scalar_learner, array_of_output, output_of_array);
     std::cout << "Learning..." << std::endl;
     f = learner(basis.begin(), basis.end(), input_of, output_of);
 
 
 
 
-    if(false){//Enregistrement
+    if(record){//Enregistrement
       auto f_predictors                   = f.predictors();
-      std::array<std::string,5> filenames = {{std::string("theta1.pred"),"theta2.pred","theta3.pred","theta4.pred","theta5.pred"}};
+      std::array<std::string,4> filenames = {{std::string("theta1.pred"),"theta2.pred","theta3.pred","theta4.pred"}};
       auto name_iter                      = filenames.begin();
       for(auto& pred : f_predictors) pred.save_model(*(name_iter++));
+      std::cout << "Enregistrement" << std::endl;
     }
 
 

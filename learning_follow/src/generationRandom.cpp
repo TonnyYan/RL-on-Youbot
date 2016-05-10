@@ -22,10 +22,9 @@
 Thetas creationThetaRandom(){
   Thetas thetarandom;
   thetarandom[0] = gaml::random::uniform(THETA1MIN,THETA1MAX);
-  thetarandom[1] = gaml::random::uniform(THETA2MIN,THETA2MAX)/10;
-  thetarandom[2] = gaml::random::uniform(THETA3MIN,THETA3MAX)/10+1;
-  thetarandom[3] = gaml::random::uniform(THETA4MIN,THETA4MAX)/10;
-  thetarandom[4] = THETA5;
+  thetarandom[1] = gaml::random::uniform(THETA2MIN,THETA2MAX)*EPS;
+  thetarandom[2] = gaml::random::uniform(THETA3MIN,THETA3MAX)*EPS-1;
+  thetarandom[3] = gaml::random::uniform(THETA4MIN,THETA4MAX)*EPS;
   return thetarandom;
 }
 
@@ -36,7 +35,6 @@ Thetas creationEpsilonAleatoire(){
   epsilonrandom[1] = gaml::random::uniform(-EPS,EPS);
   epsilonrandom[2] = gaml::random::uniform(-EPS,EPS);
   epsilonrandom[3] = gaml::random::uniform(-EPS,EPS);
-  epsilonrandom[4] = THETA5;
   std::cout << "Thetas :" << epsilonrandom << std::endl;
   ros::Duration(0.5).sleep();
   return epsilonrandom;

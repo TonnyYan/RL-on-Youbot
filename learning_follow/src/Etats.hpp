@@ -1,7 +1,7 @@
 #pragma once
 
 typedef std::array<double, 3> Rayon; //vecteur à 3 dim r
-typedef std::array<double, 5> Thetas;//vecteur à 5 dim Theta (seul les 4 premiers sont utilisés)
+typedef std::array<double, 4> Thetas;//vecteur à 5 dim Theta (seul les 4 premiers sont utilisés)
 
 class Etat{
   Rayon r;
@@ -25,12 +25,11 @@ public :
 
 typedef std::vector<Etat> BaseEtats;
 
-struct dThetas { //Sortie = 5 dThetas
+struct dThetas { //Sortie = 4 dThetas
   double theta1;
   double theta2;
   double theta3;
   double theta4;
-  double theta5;
 };
 
 struct Entree { //Rayon+Thetas qui font une entree
@@ -41,7 +40,6 @@ struct Entree { //Rayon+Thetas qui font une entree
   double theta2;
   double theta3;
   double theta4;
-  double theta5;
 };
 
 class Loss {
@@ -55,22 +53,21 @@ public:
 typedef std::pair<Entree,dThetas>  Data;
 typedef std::vector<Data>         DataSet;
 
-typedef  gaml::multidim::Predictor<dThetas,gaml::libsvm::Predictor<Entree,double>,5> fonction;	
+typedef  gaml::multidim::Predictor<dThetas,gaml::libsvm::Predictor<Entree,double>,4> fonction;	
 
 
 // This function converts an array of 5 values to a Theta.
-inline dThetas output_of_array(const std::array<double,5>& values) {
+inline dThetas output_of_array(const std::array<double,4>& values) {
   dThetas res;
   res.theta1 = values[0];
   res.theta2 = values[1];
   res.theta3 = values[2];
   res.theta4 = values[3];
-  res.theta5 = values[4];
   return res;
 }
 // This function extracts the scalar values from the Point.
-inline std::array<double,5> array_of_output(const dThetas& output) {
-  return {{output.theta1,output.theta2,output.theta3,output.theta4,output.theta5}};
+inline std::array<double,4> array_of_output(const dThetas& output) {
+  return {{output.theta1,output.theta2,output.theta3,output.theta4}};
 }
 
 
@@ -101,9 +98,6 @@ inline void fill_nodes(const Entree& ent,struct svm_node* nodes) {
   nodes->index = 7;
   nodes->value = ent.theta4;
   ++nodes;
-  nodes->index = 8;
-  nodes->value = ent.theta5; 
-  ++nodes;
   nodes->index = -1;   // end
 }
 
@@ -111,7 +105,7 @@ inline void fill_nodes(const Entree& ent,struct svm_node* nodes) {
 inline Entree input_of (const Data& data) {return data.first;}
 inline dThetas  output_of(const Data& data) {return data.second;}
 
-fonction calcul_f(const BaseEtats& baseEtats);
+fonction calcul_f(const BaseEtats& baseEtats, bool record);
 
 
 
