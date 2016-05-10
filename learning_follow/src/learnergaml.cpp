@@ -10,6 +10,8 @@
 #include <array>
 #include <list>
 #include "Etats.hpp"
+#include "learning_follow.hpp"
+
  
 struct svm_parameter params;
 
@@ -28,7 +30,11 @@ void Initialisation(){
 
 fonction calcul_f(const BaseEtats& baseEtats){
 
-  fonction f;
+  std::list<gaml::libsvm::Predictor<Entree,double>> null_predictors;
+  gaml::libsvm::Predictor<Entree,double> null_predictor(nb_nodes_of, fill_nodes);
+  for(int i = 0; i < 5; i++) null_predictors.push_back(null_predictor);
+  fonction f(output_of_array,null_predictors.begin(), null_predictors.end()); // Dummy init, will be ecrased by learner.
+
   try {
     // Let us collect samples.
     DataSet basis;

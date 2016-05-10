@@ -25,10 +25,6 @@ public :
 
 typedef std::vector<Etat> BaseEtats;
 
-// We need to define a loss for Point comparison. It has to fit gaml::concept::Loss.
-
-
-
 struct dThetas { //Sortie = 5 dThetas
   double theta1;
   double theta2;
@@ -58,6 +54,7 @@ public:
 };
 typedef std::pair<Entree,dThetas>  Data;
 typedef std::vector<Data>         DataSet;
+
 typedef  gaml::multidim::Predictor<dThetas,gaml::libsvm::Predictor<Entree,double>,5> fonction;	
 
 
@@ -114,7 +111,7 @@ inline void fill_nodes(const Entree& ent,struct svm_node* nodes) {
 inline Entree input_of (const Data& data) {return data.first;}
 inline dThetas  output_of(const Data& data) {return data.second;}
 
-inline fonction calcul_f(const BaseEtats& baseEtats);
+fonction calcul_f(const BaseEtats& baseEtats);
 
 
 

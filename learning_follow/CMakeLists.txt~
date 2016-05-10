@@ -24,10 +24,6 @@ target_link_libraries     (learnergaml ${catkin_LIBRARIES} ${GAML_LIBRARIES})
 add_dependencies          (learnergaml learnergaml_generate_messages_cpp)
 
 
-
-
-
-# Bizarre...
 add_dependencies      (getR       getR_generate_messages_cpp)
 add_dependencies      (getThetas  getThetas_generate_messages_cpp)
 add_dependencies      (moveThetas moveThetas_generate_messages_cpp)
