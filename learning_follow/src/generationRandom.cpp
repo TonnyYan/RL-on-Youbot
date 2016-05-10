@@ -24,7 +24,7 @@ Thetas creationThetaRandom(){
   thetarandom[0] = gaml::random::uniform(THETA1MIN,THETA1MAX);
   thetarandom[1] = gaml::random::uniform(THETA2MIN,THETA2MAX)*EPS;
   thetarandom[2] = gaml::random::uniform(THETA3MIN,THETA3MAX)*EPS-1;
-  thetarandom[3] = gaml::random::uniform(THETA4MIN,THETA4MAX)*EPS;
+  thetarandom[3] = gaml::random::uniform(THETA4MIN,THETA4MAX/2);
   return thetarandom;
 }
 

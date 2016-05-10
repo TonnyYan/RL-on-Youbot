@@ -27,11 +27,10 @@ ros::Subscriber sub;
 ros::ServiceClient client_rmin;
 ros::ServiceClient client_getThetas;
 ros::ServiceClient client_moveThetas;
-bool isBegin;
 
-#define NB_OSCILLATIONS 2
-#define NB_TESTS_PAR_PHASE 4
-#define NB_PASSES 2
+#define NB_OSCILLATIONS 3
+#define NB_TESTS_PAR_PHASE 10
+#define NB_PASSES 3
 #define R_min 0.5   //rayon min pour mouvement de base aleatoire
 #define R_max 1.5   //rayon max  pour mouvement de base aleatoire
 #define AngleTest 30  //angle qui definit la zone de test en degrés
@@ -157,8 +156,7 @@ void apprentissageAleatoire(fonction& g,  bool first_pass, bool record){
 
   std::cout<<"mise a jour de f"<<std::endl;
   g = calcul_f(baseEtats,record);
-  //for(auto& p : g.predictors())
-  // std::cout << "  --> " << p.get_nr_sv() << " " << p.toto() << std::endl;
+  
   
 }
 
@@ -176,7 +174,7 @@ int main(int argc, char **argv) {
   client_moveThetas = n.serviceClient<synchronisateur::moveThetas>("moveThetas");
   sleep(1);
 
-
+  
   std::list<gaml::libsvm::Predictor<Entree,double>> null_predictors;
   gaml::libsvm::Predictor<Entree,double> null_predictor(nb_nodes_of, fill_nodes);
   for(int i = 0; i < 4; i++) null_predictors.push_back(null_predictor);
