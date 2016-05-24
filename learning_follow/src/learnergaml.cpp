@@ -20,7 +20,7 @@ void Initialisation(){
   std::srand(std::time(0));
   gaml::libsvm::init(params);
   params.kernel_type = RBF;          // RBF kernel
-  params.gamma       = 1;            // k(u,v) = exp(-gamma*(u-v)^2)
+  params.gamma       = 100;            // k(u,v) = exp(-gamma*(u-v)^2)
   params.svm_type    = EPSILON_SVR;
   params.p           = .01;          // epsilon
   params.C           = 10;
@@ -45,10 +45,10 @@ fonction calcul_f(const BaseEtats& baseEtats, bool record){
 	baseEtats[i].getRayon()[0],
 	baseEtats[i].getRayon()[1],
 	baseEtats[i].getRayon()[2],
-	baseEtats[i].getThetas()[0],
-	baseEtats[i].getThetas()[1], 
-	baseEtats[i].getThetas()[2],
-	baseEtats[i].getThetas()[3]
+	baseEtats[i].getThetas()[0]/3,
+	baseEtats[i].getThetas()[1]/5, 
+	baseEtats[i].getThetas()[2]/2,
+	baseEtats[i].getThetas()[3]/5
       };
       dThetas s = {
 	baseEtats[i].getdThetas()[0],

@@ -28,9 +28,9 @@ ros::ServiceClient client_rmin;
 ros::ServiceClient client_getThetas;
 ros::ServiceClient client_moveThetas;
 
-#define NB_OSCILLATIONS 3
-#define NB_TESTS_PAR_PHASE 10
-#define NB_PASSES 3
+#define NB_OSCILLATIONS 10
+#define NB_TESTS_PAR_PHASE 20
+#define NB_PASSES 1
 #define R_min 0.5   //rayon min pour mouvement de base aleatoire
 #define R_max 1.5   //rayon max  pour mouvement de base aleatoire
 #define AngleTest 30  //angle qui definit la zone de test en degrés

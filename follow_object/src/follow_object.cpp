@@ -109,15 +109,19 @@ void autoSuivi(fonction g){
     theta = vecteur_bras_objet();
     r = vecteur_kinnect_objet();
 
+    if(r[0] == 0 && r[1] == 0 && r[2] == 0){
+      dtheta = {.0,.0,.0,.0};
+}
+    else{
     //mouvArm adequate par f
-    auto res = g({r[0],r[1],r[2],theta[0],theta[1],theta[2],theta[3]});
+    auto res = g({r[0],r[1],r[2],theta[0]/3,theta[1]/5,theta[2]/2,theta[3]/5});
     dtheta = { 
       res.theta1,
       res.theta2,
       res.theta3,
       res.theta4
     };
-
+    }
     moveArm(theta+dtheta);
 
     //stabilisation de r, theta
@@ -127,6 +131,7 @@ void autoSuivi(fonction g){
     amelioration_distance = distance_precedante-norme(r);
     distance_precedante = norme(r);
     std::cout<<"| Rayon :"<<r<< "    | Distance :"<<norme(r)<<"  |   dthetas :"<<dtheta<<" | Amelioration :"<<amelioration_distance<< std::endl;
+    
   }
 }
 

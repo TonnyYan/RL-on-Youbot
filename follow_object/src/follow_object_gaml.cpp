@@ -19,7 +19,7 @@ void Initialisation_params(){
   std::srand(std::time(0));
   gaml::libsvm::init(params);
   params.kernel_type = RBF;          // RBF kernel
-  params.gamma       = 1;            // k(u,v) = exp(-gamma*(u-v)^2)
+  params.gamma       = 100;            // k(u,v) = exp(-gamma*(u-v)^2)
   params.svm_type    = EPSILON_SVR;
   params.p           = .01;          // epsilon
   params.C           = 10;

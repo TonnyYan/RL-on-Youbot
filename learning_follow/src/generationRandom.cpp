@@ -16,14 +16,14 @@
 #define THETA4MAX 3.4292 
 #define THETA4MIN 0.0221239
 #define THETA5 0.111
-#define EPS 0.1
+#define EPS 0.125
 
 
 Thetas creationThetaRandom(){
   Thetas thetarandom;
   thetarandom[0] = gaml::random::uniform(THETA1MIN,THETA1MAX);
   thetarandom[1] = gaml::random::uniform(THETA2MIN,THETA2MAX)*EPS;
-  thetarandom[2] = gaml::random::uniform(THETA3MIN,THETA3MAX)*EPS-1;
+  thetarandom[2] = gaml::random::uniform(THETA3MIN,THETA3MAX)*EPS-1.5;
   thetarandom[3] = gaml::random::uniform(THETA4MIN,THETA4MAX/2);
   return thetarandom;
 }
