@@ -58,36 +58,6 @@ void callback(JointsSet& collection, const brics_actuator::JointPositionsConstPt
   }
 }
 
-// JointsSet creationVecteur(){//Renvoie le vecteur de points
-//   std::string ligne;
-//   std:: string nb="";
-//   JointsSet  ref_points;
-//   try {
-//     std::ifstream fichier(adresseTexte.c_str(), std::ios::in);    
-//     //  fichier.exceptions(std::ios::failbit | std::ios::badbit | std::ios::eofbit);//Test si erreur
-//     while(getline(fichier,ligne)){
-//       Joints uneLigne;
-//       for(int i =0; i<5; i++){nb=nb+ligne[i];}
-//       uneLigne[0]=string_to_double(nb);
-//       nb="";
-//       for(int i =6; i<10; i++){nb=nb+ligne[i];}
-//       uneLigne[1]=string_to_double(nb);
-//       nb="";
-//       for(int i =12; i<16; i++){nb=nb+ligne[i];}
-//       uneLigne[2]=string_to_double(nb);
-//       nb="";
-//       for(int i =17; i<21; i++){nb=nb+ligne[i];}
-//       uneLigne[3]=string_to_double(nb);
-//       nb="";
-//       ref_points.push_back(uneLigne);
-//     }
-//   }
-//   catch (const std::exception& e) {
-//     ROS_INFO_STREAM("ERREUR Ouverture Fichier");
-//   }
-//   return ref_points;
-// }
-
 JointsSet creationVecteur() {
   JointsSet  ref_points;
   auto out = std::back_inserter(ref_points);
