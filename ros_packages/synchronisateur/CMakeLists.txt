@@ -1,0 +1,59 @@
+cmake_minimum_required(VERSION 2.8.3)
+project(synchronisateur)
+
+## Find catkin macros and libraries
+## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
+## is used, also find other catkin packages
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rospy
+  std_msgs
+  message_generation
+)
+
+add_service_files(
+  FILES
+  getR.srv
+  getThetas.srv
+  moveThetas.srv
+)
+
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
+catkin_package(
+#  INCLUDE_DIRS include
+#  LIBRARIES synchronisateur
+#  CATKIN_DEPENDS roscpp rospy std_msgs
+#  DEPENDS system_lib
+)
+
+include_directories(
+  ${catkin_INCLUDE_DIRS}
+)
+
+ add_executable(getR src/getR.cpp)
+ target_compile_options(getR PUBLIC -std=c++11)
+ add_dependencies(getR getR_generate_messages_cpp)
+ 
+ add_executable(getThetas src/getThetas.cpp)
+ target_compile_options(getThetas PUBLIC -std=c++11)
+ add_dependencies(getThetas getThetas_generate_messages_cpp)
+
+ add_executable(moveThetas src/moveThetas.cpp)
+ target_compile_options(moveThetas PUBLIC -std=c++11)
+ add_dependencies(moveThetas moveThetas_generate_messages_cpp)
+
+target_link_libraries(getR
+   ${catkin_LIBRARIES}
+)
+
+target_link_libraries(getThetas
+   ${catkin_LIBRARIES}
+)
+
+target_link_libraries(moveThetas
+   ${catkin_LIBRARIES}
+)

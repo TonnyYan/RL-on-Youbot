@@ -1,0 +1,9 @@
+<launch>
+  <node pkg="navigation" type="move_base" respawn="false" name="move_base" output="screen">
+    <rosparam file="$(find navigation_youbot)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find navigation_youbot)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+    <rosparam file="$(find navigation_youbot)/config/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find navigation_youbot)/config/global_costmap_params.yaml" command="load" />
+    <rosparam file="$(find navigation_youbot)/config/base_local_planner_params.yaml" command="load" />
+  </node>
+</launch>
