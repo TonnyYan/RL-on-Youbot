@@ -1,5 +1,0 @@
-local_costmap:
-  global_frame: odom
-  robot_base_frame: base_link
-  static_map: false
-  resolution: 0.05
